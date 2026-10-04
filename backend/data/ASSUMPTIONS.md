@@ -97,7 +97,22 @@ wrong occurrence).
 | I7 | Track points with no wind reading at all are **dropped** | JUDGEMENT | The point cannot contribute to a wind field. |
 | I8 | Track points with no position are **dropped** | JUDGEMENT | As above. |
 
-## 9. Data sources and licences (DR-6)
+## 9. Synthetic portfolio (DR-1)
+
+| # | Assumption | Status | Notes |
+|---|---|---|---|
+| X1 | Region exposure weights are **approximate resident populations**, not GIROJ sums insured or e-Stat dwelling counts | JUDGEMENT | DR-1 asks for the latter two; we do not hold those datasets. Populations are public general knowledge and give a plausible distribution. The portfolio is synthetic by rule (C-8), so nothing downstream claims these are real exposure. Replacing them is a one-table change. **Benchmark B5 must not be run on these weights** — it uses a market-level proxy, which is a separate input. |
+| X2 | All **22** ISO 3166-2:TW entries are carried | DERIVED | DR-1 says "21 counties/cities"; ISO lists 22. Carrying all 22 rather than dropping one to hit a number. |
+| X3 | `TSI_PER_WEIGHT_USD_M = 15,000` | JUDGEMENT | Makes the synthetic Japanese market about **US$18.7tn** of sum insured — the right order for Japan, whose real insured value is order US$20–30tn — and puts Sakura at 14% share on about US$2.6tn. A round number chosen for that realism. |
+| X4 | Market shares are **explicit per cedent**, not drawn from the seed | JUDGEMENT | A cedent's size is structural. If it moved with the seed, the demo's headline figures would move with it. Sakura is pinned at 14%. |
+| X5 | The modelled Jebi gross loss for Sakura lands at **54.45** against the worked example's 54.40 | DERIVED | Falls out of X3 and X4 rather than being fitted. It is what lets the live demo reproduce the documented figures, and it is asserted by `test_the_jebi_replay_reproduces_the_worked_example_gross`. If `build_events.py`'s real IBTrACS track moves it, re-derive X3 once rather than loosening the test. |
+| X6 | **The model under-predicts Jebi's actual market loss by roughly 25x** | UNVERIFIED | Jebi's paid claims were about ¥1,068bn (~US$9.5bn). The curve gives a market-wide damage ratio of ~0.00024 against a reality of ~0.0003–0.0005 — so the curve is roughly right at market level, but the modelled footprint only reaches 16 regions at low ratios, while real losses were broader and driven partly by flood and surge the model does not carry. **This is a B5 finding to report honestly, not something to tune away in the portfolio.** The lever is `calibration_factor` (V3), and it stays at 1.0 until B5 derives it. |
+| X7 | Programmes are sized against a **reference major-event loss**, not against sum insured | JUDGEMENT | DR-1 asks for retentions "plausible relative to TSI", but a Cat XL is bought against a return-period loss. Sakura retains 10.0 of a 54.4 event — 18.4% of the event, and 0.0004% of its TSI, which is entirely normal for a cat cover. Every filler programme attaches in the same 15–35% band, so the book is internally coherent. |
+| X8 | Each cedent's reference loss scales linearly with its sum insured from Sakura's | JUDGEMENT | Ignores that a Philippine book is far more wind-vulnerable than a Japanese one at the same wind speed. It only has to make the filler book's structure sensible, and it keeps the generator free of any dependency on the vulnerability curves. |
+| X9 | Philippine earthquake penetration is **25%** of wind | JUDGEMENT | Reflects thin EQ take-up. Illustrative. |
+| X10 | Region **centroids** are approximate, to about a tenth of a degree | JUDGEMENT | Committed so the hazard chain is testable and the demo runs without the ~40 MB Natural Earth download. `build_regions.py` recomputes them from Natural Earth 10m admin-1 polygons; a recomputed centroid more than ~50 km away is a reconciliation failure worth investigating. |
+
+## 10. Data sources and licences (DR-6)
 
 | Source | Use | Licence |
 |---|---|---|
@@ -114,10 +129,12 @@ Portfolio, cedents and treaty wordings are **entirely synthetic**. Events are
 real, and the referenced market losses are real; those are used for
 credibility and the B5 back-test only, **never as model inputs**.
 
-## 10. Outstanding — to validate, not blocking
+## 11. Outstanding — to validate, not blocking
 
 1. `calibration_factor` (V3) and the EQ country factors (Q3) are 1.0 / 0.5 placeholders until B5 runs. Calibrate on one event, test on the other, and report misses honestly.
 2. The EQ MMI table (Q1) should be checked against published Hazus repair ratios before it is cited as anything but illustrative.
 3. The 10-minute to 1-minute wind factor (I4) deserves a source rather than convention.
 4. Centroid representation (W8) is the largest structural simplification in the hazard chain. Quantify its effect on at least one event before claiming regional accuracy.
 5. Baseline manual-effort figures are hypotheses until the B1 run.
+6. The portfolio exposure weights (X1) should be rebuilt on GIROJ and e-Stat figures before any claim about regional accuracy is made.
+7. X6 is the single most important honest disclosure in the proof pack: report the under-prediction and the calibration separately.
