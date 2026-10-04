@@ -1,0 +1,6 @@
+# Runtime dependencies. Pinned per CLAUDE.md / REQUIREMENTS C-5.
+#
+# The loss engine (S2) is deliberately stdlib-only -- see FR-LOSS-6.
+# google-adk, google-genai, fastapi and friends are pinned at S3/S4, once
+# each has been verified to install and resolve against the real project.
+# Adding unverified pins here would block S2 on a failing install.
