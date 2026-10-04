@@ -77,13 +77,13 @@ The climax. Figures from `docs/MONEY_MOMENT.md`, confirmed against a real run.
 >
 > And then the engine prices both.
 >
-> One clause. **Ten million dollars**, or twenty-two and a half percent of total recoveries. The cedent's retention doubles. And here's what a single headline would hide — because our share is concentrated in the lower layer, **the reading that saves the treaty ten million costs us more**.
+> One clause. **Ten million dollars**, or twenty-two and a half percent of total recoveries. The cedent's retention doubles. And here's what a single headline would hide — our share is concentrated in the lower layer, so **the reading that saves the treaty ten million costs us seven percent more**. On this programme our interest sits with the cedent, against the rest of the market.
 >
 > The agents don't decide. The analyst does."
 
-**On screen.** Side-by-side priced outcomes, `money at stake` per party with direction, then the analyst recording a position.
+**On screen.** Side-by-side priced outcomes, then the three-party strip — cedent prefers one event, market prefers two, **we** prefer one — then the analyst recording a position.
 
-*Do not state a specific Lion Re net figure until `MONEY_MOMENT.md` §4.1 is signed off by the domain lead. The −$10.0M / −22.5% headline and the direction of the asymmetry are safe to script now.*
+*Figures resolved in `MONEY_MOMENT.md` §4: our net 6.82 → 7.33, +7.4%. All of scene 4 is safe to script. The three-party divergence in §4.4 is the strongest 10 seconds in the video — give it room.*
 
 ---
 

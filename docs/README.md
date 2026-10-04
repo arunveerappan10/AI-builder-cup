@@ -13,7 +13,7 @@ Google Cloud AI Builder Cup 2026 · BFSI theme · Team Techno Crackers
 | 2 | [`REQUIREMENTS.md`](REQUIREMENTS.md) | Base spec v1 — requirement IDs, acceptance criteria, data specs, API contract, agent specs | ✅ base pack |
 | 3 | [`REQUIREMENTS_V2.md`](REQUIREMENTS_V2.md) | Addendum — verifier, Clause Courtroom, endorsement detective, what-if, judge mode, revised NFRs | ✅ current |
 | 4 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | Reinsurance terms and the worked example used as test fixtures | ✅ base pack |
-| 5 | [`MONEY_MOMENT.md`](MONEY_MOMENT.md) | The demo's climax, derived number by number | ✅ current · **§4 needs domain lead** |
+| 5 | [`MONEY_MOMENT.md`](MONEY_MOMENT.md) | The demo's climax, derived number by number | ✅ current · §4 resolved |
 | 6 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Agent graph, data flows, service topology, trust architecture | ✅ current |
 | 7 | [`RESEARCH_FINDINGS.md`](RESEARCH_FINDINGS.md) | Verified facts, API quirks, data-source details | ✅ base pack |
 | 8 | [`EXECUTION_PLAN.md`](EXECUTION_PLAN.md) | GCP setup commands, cost model, deploy procedure | ✅ base pack |
@@ -52,7 +52,7 @@ They were copied rather than rewritten deliberately: they hold verified research
 
 **All deltas live in `REQUIREMENTS_V2.md`**, so the base pack stays diffable against the team's version. Do not edit the seven in place — add to the addendum instead.
 
-**S2 (the engine) depends on `DOMAIN_PRIMER.md`'s worked example** for its test fixtures. The reference figures are reproduced in `MONEY_MOMENT.md` §3, but the primer is the source of truth and the domain lead's sign-off target.
+**S2 (the engine) depends on `DOMAIN_PRIMER.md`'s worked example** for its test fixtures. The primer is the source of truth for the one-event figures; `MONEY_MOMENT.md` §3–4 extends them to the two-occurrence split and derives the reinstatement-premium convention from them. QA-1 asserts both.
 
 ---
 

@@ -109,7 +109,18 @@ Clone, Python 3.12 venv, repo layout per `REQUIREMENTS.md` §3.1, FastAPI `/heal
 
 **No agent code before this passes.** Pure Python, no GCP dependency — this stage can start before cloud access is confirmed.
 
-- [ ] **Gate:** `pytest -q` green. Worked example exact: gross **54.4** · L1 **20.0** · L2 **24.4** · L3 **0** · Lion Re loss **7.44** · our RIP **0.622** · net **≈ 6.82** · split case **29.4 / 5.0**. Full branch coverage on `loss_engine.py`.
+- [ ] **Gate:** `pytest -q` green. Full branch coverage on `loss_engine.py`. Worked example exact:
+
+  | | One event | Two events (35.0 + 19.4) |
+  |---|---|---|
+  | Gross | 54.4 | 54.4 |
+  | L1 / L2 / L3 ceded | 20.0 / 24.4 / 0 | **29.4 / 5.0 / 0** |
+  | Total ceded · cedent retention | 44.4 · 10.0 | **34.4 · 20.0** |
+  | Lion Re loss | 7.44 | **7.85** |
+  | Our RIP | 0.622 | **0.525** |
+  | **Our net** | **≈ 6.82** | **≈ 7.33** |
+
+  Plus the per-party view of `MONEY_MOMENT.md` §4.4 — cedent 13.22 → 22.25, market 41.18 → 32.15, us 6.82 → 7.33. Reinstatement capacity capped at `limit × (1 + count)`; erosion past capacity pays but generates no RIP.
 
 ### S3 · Ingestion and retrieval
 `ingest_treaty.py` (Gemini structured output via `Part.from_uri`, temperature 0, `field_pages` on every field) · embeddings at 768 dims, L2-normalised, `task_type=RETRIEVAL_DOCUMENT` · vector index **created with gcloud** · `retrieval.py` with equality pre-filter on `treaty_id` · local vector fallback.
@@ -178,7 +189,7 @@ These do not block code and must start as early as their dependency allows.
 | 1 | Build location and git remote — this repo, `main` with per-stage branches | ✅ resolved: `github.com/arunveerappan10/AI-builder-cup` |
 | 2 | `gcloud` and `firebase-tools` are not installed locally; GCP access unverified; `gemini-3.5-flash-lite` / `gemini-3.8-flash` not yet confirmed to resolve on the project | ⏳ **open** — **placeholders in use**, see below. S1 and S2 proceed locally meanwhile |
 | 3 | Python 3.12 required; only 3.14 is installed | ⏳ **open** |
-| 4 | Money-moment framing — reinstatement-premium basis and L1 reinstatement sufficiency | ⏳ **open** — needs domain lead, see `MONEY_MOMENT.md` §4 |
+| 4 | Money-moment framing — reinstatement-premium basis | ✅ **resolved** — derived from the primer's own figures in `MONEY_MOMENT.md` §4. Two non-blocking items for a practitioner in §4.5 |
 | 5 | GCP project remains `techno-crackers-catsight` (owned by the project owner) while code lives in this repo | ⏳ confirm |
 
 ### Placeholder convention (decision 2)

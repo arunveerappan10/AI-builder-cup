@@ -89,9 +89,12 @@ The hours clause — the definition of "one event":
 |---|---|---|---|
 | Total ceded | $44.4M | $34.4M | **−$10.0M · −22.5%** |
 | Cedent retention | $10.0M | $20.0M | doubles |
-| Our net | $6.82M | [PENDING §4.1] | **worse under the split** |
+| **Our net** | $6.82M | **$7.33M** | **+7.4% — we pay more** |
 
-Then the reveal: **our share is concentrated in Layer 1, so the reading that saves the treaty $10M costs us more.** The cedent argues one event. We argue two. We are not arguing about the same pot.
+Then the reveal, in two beats:
+
+1. **Our share is concentrated in Layer 1**, so the reading that saves the treaty $10M costs us more — our share of recoveries rises from 16.8% to 22.8% while the market's total bill falls.
+2. **So our interest sits with the cedent, against the rest of the market on this programme.** Cedent prefers one event by $9.03M. The market prefers two by the same. We prefer one, by $0.51M. Three parties, not two — and no portfolio-level number shows it.
 
 Evidence that the question is real: *UnipolSai v Covéa* (English Court of Appeal, 2024) turned on how a 168-hour clause works.
 

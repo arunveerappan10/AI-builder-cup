@@ -38,7 +38,17 @@ Adversarial interpretation of the single most material ambiguous clause — typi
 - **FR-COURT-5 · Arbiter and position.** AG-8 `arbiter` on `MODEL_REASON` summarises the dispute risk, cites the case-law consideration where relevant (`UnipolSai v Covéa`, 2024: "occur" means "first occur"), and names which reading each party would advance and why. It **does not decide.** The analyst records a position (`cedent_reading` | `reinsurer_reading` | `unresolved`) with an optional note, persisted to `analyses.courtroom.position`.
 - **Persistence.** `analyses.courtroom = {flag_ref, sides[], priced_outcomes{}, money_at_stake{}, arbiter_md, position, decided_at}`.
 - **Guardrails.** Labelled **issue-spotting, not legal advice**. The human decides. Both sides must cite verified text or be dropped. The arbiter is instructed never to state a number not present in the engine output.
-- **Acceptance:** on the Jebi/Sakura hours-clause case the Courtroom produces both readings, both verified, both priced, with `money_at_stake` matching the figures in `MONEY_MOMENT.md` §3 exactly. **QA-11.**
+- **Acceptance:** on the Jebi/Sakura hours-clause case the Courtroom produces both readings, both verified, both priced, with `money_at_stake` matching `MONEY_MOMENT.md` §3 exactly — total ceded 44.4 → 34.4, cedent retention 10.0 → 20.0, our net 6.82 → 7.33 — and the per-party preferences of §4.4 reproduced. **QA-11.**
+
+### FR-LOSS-3 clarified (overrides v1)
+
+v1 gives `RIP = (ceded / limit) × premium × rate` without stating that `ceded` is **per occurrence**. Applied to aggregate ceded in a multi-occurrence scenario it charges for more reinstatements than the treaty provides (1.47 against 1 available in the worked example). Restated:
+
+> For each occurrence, in chronological order: `RIP += (limit eroded by that occurrence / limit) × premium × rate`, pro rata as to amount, **while reinstatement capacity remains**. Cumulative reinstated amount is capped at `count × limit`; aggregate cover is capped at `limit × (1 + count)`. Erosion beyond available reinstatement capacity is still paid if aggregate cover allows, but generates **no** RIP — nothing is restored.
+
+Reinstatement applies to **partial erosion**, not only to exhaustion. Derivation from the primer's published one-event figures in `MONEY_MOMENT.md` §4.1. QA-1 asserts both the one-event total (our RIP 0.622, net 6.82) and the split (our RIP 0.525, net 7.33).
+
+The engine returns the **per-party** view — cedent net cost, market net, our net — because the per-party divergence is the demo's payload, not a derived nicety.
 
 ### FR-ENDORSE · Endorsement detective (SHOULD · S2)
 

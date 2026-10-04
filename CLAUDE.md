@@ -117,7 +117,7 @@ A half-finished Courtroom scores worse than no Courtroom. If anything slips, dro
 ### Stop and ask the human for
 - GCP billing or project setup, and creating secrets (e.g. `ADMIN_TOKEN`);
 - anything that publishes externally — deploys to the live URL after the submission tag, GitHub visibility changes, posts;
-- the money-moment framing in `docs/MONEY_MOMENT.md` §4 (the reinstatement-premium basis needs the domain lead);
+- any change to the figures in `docs/MONEY_MOMENT.md` §3–4 — they are asserted by QA-1 and QA-11, and the deck and video are scripted on them, so a code change that moves them means the slide is wrong, not the test;
 - any decision that conflicts with `REQUIREMENTS.md` or `REQUIREMENTS_V2.md`.
 
 ## Definition of done
