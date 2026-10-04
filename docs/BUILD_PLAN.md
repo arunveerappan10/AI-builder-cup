@@ -187,10 +187,10 @@ These do not block code and must start as early as their dependency allows.
 | # | Decision | Status |
 |---|---|---|
 | 1 | Build location and git remote — this repo, `main` with per-stage branches | ✅ resolved: `github.com/arunveerappan10/AI-builder-cup` |
-| 2 | `gcloud` and `firebase-tools` are not installed locally; GCP access unverified; `gemini-3.5-flash-lite` / `gemini-3.8-flash` not yet confirmed to resolve on the project | ⏳ **open** — **placeholders in use**, see below. S1 and S2 proceed locally meanwhile |
-| 3 | Python 3.12 required; only 3.14 is installed | ⏳ **open** |
+| 2 | GCP access: CLIs, enabled APIs, Firestore mode, and whether `gemini-3.5-flash-lite` / `gemini-3.8-flash` / `gemini-embedding-001` resolve on the project | ⏳ **partly resolved** — `firebase-tools` installed, `gcloud` installing. **Access still unverified**: run `scripts/check_access.ps1` after `gcloud auth application-default login`. Placeholders remain the convention |
+| 3 | Python 3.12 required; only 3.14 was installed | ✅ **resolved** — 3.12.10 installed; `backend/.venv` runs on it (3.14 stays the system default) |
 | 4 | Money-moment framing — reinstatement-premium basis | ✅ **resolved** — derived from the primer's own figures in `MONEY_MOMENT.md` §4. Two non-blocking items for a practitioner in §4.5 |
-| 5 | GCP project remains `techno-crackers-catsight` (owned by the project owner) while code lives in this repo | ⏳ confirm |
+| 5 | Which GCP project this repo deploys to | ✅ **resolved 2026-10-05** — `techno-crackers-catsight`, matching the onboarding guide. Bucket `techno-crackers-catsight-docs`; Hosting origins `*.web.app` / `*.firebaseapp.com`. Substituted into the git-ignored `backend/.env`; `.env.example` keeps the placeholder |
 
 ### Placeholder convention (decision 2)
 
