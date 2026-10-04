@@ -232,6 +232,31 @@ def _period(treaty: Treaty) -> Clause:
 
 def _loss_occurrence(treaty: Treaty, wording: WordingSpec, style: str) -> Clause:
     hours = treaty.hours_clause
+
+    if wording.wording_id == "W8":
+        # DR-2's extraction-robustness case: the operative period lives in the
+        # Definitions clause, and Clause 5 only cross-references it. Stating
+        # the figure in both places would claim the same field on two pages,
+        # which makes QA-4's citation page accuracy unscoreable for it.
+        return Clause(
+            number="5",
+            title="Loss Occurrence",
+            paragraphs=(
+                "The term Loss Occurrence bears the meaning given to it in "
+                "Clause 12, and the period there stated governs as respects "
+                "Windstorm and Earthquake alike.",
+                "As respects Flood, and as respects any other peril covered "
+                f"hereunder, the period is {hours_phrase(hours['FL'], style)}.",
+                "The Reinsured may elect the moment from which each such period "
+                "commences, provided that it shall not be earlier than the "
+                "moment at which the first individual loss comprising the Loss "
+                "Occurrence first occurs, and provided that no two periods in "
+                "respect of the same event shall overlap.",
+            ),
+            clause_type="HOURS",
+            fields=(GroundTruthField("hours_clause.FL", hours["FL"]),),
+        )
+
     base_ws = (
         ENDORSEMENT_BASE_HOURS
         if wording.wording_id == ENDORSED_WORDING
@@ -518,8 +543,9 @@ def _definitions(treaty: Treaty, wording: WordingSpec, style: str) -> Clause:
     fields: list[GroundTruthField] = []
 
     if wording.wording_id == "W8":
-        # W8 hides the hours clause here, in words, with no digits. An
-        # extractor keyed on digits will miss it entirely.
+        # W8 hides the operative period here, in words, with no digits, behind
+        # a cross-reference from Clause 5. An extractor keyed on digits, or one
+        # that stops at the clause titled "Loss Occurrence", misses it.
         paragraphs.append(
             "Loss Occurrence, as respects Windstorm and as respects Earthquake "
             "alike, means all individual losses which first occur within "
@@ -528,6 +554,7 @@ def _definitions(treaty: Treaty, wording: WordingSpec, style: str) -> Clause:
             "electing the commencement of that period subject to Clause 5."
         )
         fields.append(GroundTruthField("hours_clause.WS", treaty.hours_clause["WS"]))
+        fields.append(GroundTruthField("hours_clause.EQ", treaty.hours_clause["EQ"]))
 
     return Clause(
         number="12",

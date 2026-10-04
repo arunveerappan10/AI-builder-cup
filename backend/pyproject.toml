@@ -5,11 +5,14 @@ addopts = "-q --strict-markers"
 
 [tool.coverage.run]
 branch = true
-source = ["catsight_agent", "ingest"]
+source = ["catsight_agent", "ingest", "qa"]
 
 [tool.coverage.report]
 show_missing = true
-exclude_lines = [
+# `exclude_also` APPENDS to coverage's defaults. `exclude_lines` REPLACES
+# them, which silently drops the built-in "pragma: no cover" rule and makes
+# every deliberately-unexercised adapter look like missing coverage.
+exclude_also = [
     "if TYPE_CHECKING:",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",

@@ -1,3 +1,7 @@
 .venv/
 data/synthetic/portfolio/
 data/synthetic/wordings/
+
+# Derived wording PDFs are regenerated; the answer key is committed
+data/synthetic/wordings/*.pdf
+data/synthetic/wordings/*.md

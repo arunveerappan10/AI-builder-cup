@@ -140,7 +140,28 @@ wrong occurrence).
 | Z8 | Facts and reference losses are **never model inputs** | DERIVED | Quoted from RESEARCH_FINDINGS §D8 for credibility and the B5 back-test only. Every event file carries that statement in its own `disclaimer` field, so the file cannot be read as claiming them as output. |
 | Z9 | Source data is **cache-first, never fetched implicitly** | JUDGEMENT | The 114 MB CSV and 7.6 MB grid live in git-ignored `data/raw/`. A missing source fails with the exact URL and target path rather than producing a half-event; `--fetch` downloads explicitly. A zero-byte file counts as missing, because a truncated download is worse than an absent one. |
 
-## 12. Data sources and licences (DR-6)
+## 12. Ingestion and retrieval (FR-INGEST, S3 local half)
+
+| # | Assumption | Status | Notes |
+|---|---|---|---|
+| R1 | Chunking is **by clause**, falling back to **by page** | DERIVED | FR-INGEST-2. Every flag cites a clause number and a page, and the verifier quote-matches against the stored chunk, so a chunk straddling two clauses can produce a quote that verifies against the chunk while citing the wrong clause — worse than failing, because it looks correct. |
+| R2 | A clause is classified from its **heading**, not its body | JUDGEMENT | The heading is the drafter's own classification; body keywords are noise, and the decoys exploit exactly that. "Inspection of Records" mentions a period, "Loss Advices and Cash Calls" mentions a retention, "Definition: Business Day" mentions territory — a body-keyword classifier mistypes all three, and FR-WORD's retrieval would then pull them as material. |
+| R3 | Structural headings (`Definitions`, `Endorsement`, `Schedule`, `Interpretation`) **defer to the body** | JUDGEMENT | They describe structure, not subject matter. This is what lets W8's operative hours clause — hidden inside a clause titled "Definitions" — and the scanned endorsement's override both classify correctly. |
+| R4 | Body classification uses a **narrow phrase set**, not keywords | DERIVED | `consecutive hours` rather than `hours`. Every decoy says "within 72 hours of", "settle within 168 hours" and so on; **none** says "consecutive hours", which is the operative phrase in a loss-occurrence definition. That makes it a safe discriminator where a bare "hours" is not. |
+| R5 | `clause_type` is a **filter of convenience, never a gate** | DERIVED | Retrieval ranks by vector similarity and uses `clause_type` only to reorder. Filtering hard on it would lose any clause whose heading does not advertise its subject. |
+| R6 | A chunk **retains its own heading** in its text | JUDGEMENT | The heading is semantically informative, so it helps retrieval, and it is harmless to quote-matching. It also means a chunk body is never empty, which is why there is no empty-body guard. |
+| R7 | An image-only page **without** a transcription is **skipped, not emitted empty** | JUDGEMENT | The caller is responsible for noticing: a silently dropped endorsement is how an override gets missed. A page yielding under 120 characters after furniture-stripping is treated as image-only; the scanned endorsement yields 45. |
+| R8 | Local vectors are **768-dimensional**, matching production | DERIVED | C-2. Same shape locally and in production, so an index built on one is not silently incompatible with the other. |
+| R9 | Vector pre-filters are **equality only** | SOURCED | C-11, a Firestore constraint. The interface therefore offers only `treaty_id`, so a query written against the in-memory store behaves identically against Firestore. |
+| R10 | Ranking ties break on `chunk_id` | JUDGEMENT | Without it, equal scores reorder between runs and QA-5's ADK tool-trajectory check becomes flaky. |
+| R11 | **`DeterministicEmbedder` has no semantics. Never quote a retrieval metric measured against it.** | JUDGEMENT | ⚠️ It is a hashing bag-of-words, so it matches on shared vocabulary and nothing else — "hours clause" and "loss occurrence" are the same concept and it scores them at zero (asserted by a test). It exists so chunking, retrieval, the tool contract and the QA harness can be built and tested without a model call. **Recall and precision figures for the deck come from `GeminiEmbedder` against a live Firestore index and from nowhere else.** |
+| R12 | QA-3 comparison is **typed, not textual** | JUDGEMENT | `"72"`, `72` and `72.0` are the same hours clause; `["WS","EQ"]` and `["EQ","WS"]` are the same peril list. A string compare fails all of these and reports an accuracy far below the truth — the sort of error that gets a threshold loosened when the extractor was right. Coercion is narrow: a scalar never matches a list, and booleans never compare as numbers. |
+| R13 | A field **absent** from an extraction counts as **wrong**, not skipped | JUDGEMENT | Otherwise omitting the hard fields is the easiest route to a high score. |
+| R14 | Citation pages are scored **separately** from field values | DERIVED | QA-4 scores page accuracy at ≥ 95% on its own line. A field extracted correctly but cited to the wrong page is a different failure: the number is right and the audit trail is wrong, which in a regulated setting is arguably worse. Averaging the two would hide both. |
+| R15 | Transcription reads are reported **separately** from text-layer reads | DERIVED | At two transcription fields out of 186, a uniform average would hide a total failure to read the scan. A model that reads clean text well and scans badly has a very different weakness from one that is uniformly mediocre. |
+| R16 | Each field is claimed on **exactly one page** in the answer key | DERIVED | A field claimed on two pages cannot be cited correctly, which makes QA-4's page accuracy unscoreable for it. W8 originally did this — its hours clause appeared in both Clause 5 and the Definitions clause — so Clause 5 now cross-references rather than restating. Asserted by a test. |
+
+## 13. Data sources and licences (DR-6)
 
 | Source | Use | Licence |
 |---|---|---|
@@ -157,7 +178,7 @@ Portfolio, cedents and treaty wordings are **entirely synthetic**. Events are
 real, and the referenced market losses are real; those are used for
 credibility and the B5 back-test only, **never as model inputs**.
 
-## 13. Outstanding — to validate, not blocking
+## 14. Outstanding — to validate, not blocking
 
 1. `calibration_factor` (V3) and the EQ country factors (Q3) are 1.0 / 0.5 placeholders until B5 runs. Calibrate on one event, test on the other, and report misses honestly.
 2. The EQ MMI table (Q1) should be checked against published Hazus repair ratios before it is cited as anything but illustrative.
@@ -166,5 +187,6 @@ credibility and the B5 back-test only, **never as model inputs**.
 5. Baseline manual-effort figures are hypotheses until the B1 run.
 6. The portfolio exposure weights (X1) should be rebuilt on GIROJ and e-Stat figures before any claim about regional accuracy is made.
 7. X6 is the single most important honest disclosure in the proof pack: report the under-prediction and the calibration separately.
-8. Z4: decide whether Noto's aftershock sequence should form one occurrence or several before the earthquake path is presented as complete.
-9. **Y9 is the second: the holdout set is not a blind set.** A human outside the prompt work needs to write three wordings with planted issues the prompt author never sees. Until then, the holdout score is reported as a holdout score.
+8. **R11 is the third: no retrieval quality number exists yet.** Chunking, ranking and the QA harness are tested; the embedder they are tested against is not semantic. Nothing about recall, precision or extraction accuracy can be reported until `GeminiEmbedder` runs against a live index.
+9. Z4: decide whether Noto's aftershock sequence should form one occurrence or several before the earthquake path is presented as complete.
+10. **Y9 is the second: the holdout set is not a blind set.** A human outside the prompt work needs to write three wordings with planted issues the prompt author never sees. Until then, the holdout score is reported as a holdout score.
