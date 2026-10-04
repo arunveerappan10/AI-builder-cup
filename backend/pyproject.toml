@@ -5,7 +5,7 @@ addopts = "-q --strict-markers"
 
 [tool.coverage.run]
 branch = true
-source = ["catsight_agent"]
+source = ["catsight_agent", "ingest"]
 
 [tool.coverage.report]
 show_missing = true
