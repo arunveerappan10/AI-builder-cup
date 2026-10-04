@@ -1,6 +1,11 @@
 # Runtime dependencies. Pinned per CLAUDE.md / REQUIREMENTS C-5.
 #
 # The loss engine (S2) is deliberately stdlib-only -- see FR-LOSS-6.
-# google-adk, google-genai, fastapi and friends are pinned at S3/S4, once
-# each has been verified to install and resolve against the real project.
-# Adding unverified pins here would block S2 on a failing install.
+# These are the data-build dependencies (S1). google-adk, google-genai,
+# fastapi and friends are pinned at S3/S4, once each has been verified to
+# install and resolve against the real project. Adding unverified pins
+# would block the build on a failing install for no benefit.
+
+reportlab==4.2.5   # treaty wording PDFs (DR-2)
+pillow==11.0.0     # the scanned endorsement raster (FR-ENDORSE)
+pypdf==5.1.0       # reading page numbers back out of rendered PDFs

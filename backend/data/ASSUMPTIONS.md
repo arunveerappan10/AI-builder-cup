@@ -112,7 +112,21 @@ wrong occurrence).
 | X9 | Philippine earthquake penetration is **25%** of wind | JUDGEMENT | Reflects thin EQ take-up. Illustrative. |
 | X10 | Region **centroids** are approximate, to about a tenth of a degree | JUDGEMENT | Committed so the hazard chain is testable and the demo runs without the ~40 MB Natural Earth download. `build_regions.py` recomputes them from Natural Earth 10m admin-1 polygons; a recomputed centroid more than ~50 km away is a reconciliation failure worth investigating. |
 
-## 10. Data sources and licences (DR-6)
+## 10. Treaty wordings (DR-2, FR-ENDORSE)
+
+| # | Assumption | Status | Notes |
+|---|---|---|---|
+| Y1 | Wording prose is **original**, written in the register of catastrophe excess-of-loss contracts | DERIVED | RESEARCH_FINDINGS §D9 permits publicly filed wordings as a *style* reference only. Nothing is copied. Every document states on its face that it is synthetic, fictional and of no legal effect. |
+| Y2 | Ground-truth **page numbers are read back out of the rendered PDF**, not predicted | DERIVED | QA-4 scores citation page accuracy at ≥ 95%, which is meaningless if the answer key's own pages were guessed. A layout change can no longer silently invalidate the key. |
+| Y3 | The hours clause is phrased in **four registers** across the eight wordings | JUDGEMENT | `plain`, `spelled`, `period`, `words`. W8 carries it inside a definition with **no digits at all**. A single register would let a prompt tuned to one layout score 100%. |
+| Y4 | **Ten decoy passages** mention a number of hours without being the hours clause | JUDGEMENT | Notification deadlines, cash-call windows, inspection notice, arbitration service, premium interest. They let QA-4 measure precision rather than recall alone. Each is recorded in the answer key, so a flag citing one scores as the false positive it is. |
+| Y5 | **Boilerplate** clauses carry neither ground-truth fields nor decoy status | JUDGEMENT | Realistic noise — a real treaty is mostly boilerplate. Counting it either way would distort both recall and precision. It is also what brings each document honestly into DR-2's 6–15 page range rather than padding. |
+| Y6 | The scanned endorsement sits on **W4** | JUDGEMENT | DR-2 does not pin W4's hours clause, so an override there adds a planted feature without contradicting the documented W1–W8 table — and it is not W1, whose terms the money moment depends on. |
+| Y7 | The endorsement page has **no text layer** | DERIVED | Rendered as a raster image. Asserted by `test_the_endorsement_page_has_no_extractable_text`; the page yields under 120 characters, all of it the rendered footer. An endorsement the text extractor hands over for free exercises nothing. |
+| Y8 | W4's **effective** windstorm hours window is 168, not the 72 its base clause states | DERIVED | FR-ENDORSE-3 makes the endorsement operative. The treaty record carries the effective term plus `endorsement{base_value, endorsed_value, source}` for provenance, and the answer key records both rows with distinct `source` values. |
+| Y9 | **The "blind set" is a structural holdout, not a blind set** | JUDGEMENT | ⚠️ DR-2 and risk #5 in the win-readiness review ask for wordings written by someone **outside the prompt work**, so an accuracy score is not self-graded. This cannot be satisfied by the same author who writes the wordings, the answer key and the extraction prompts. What the generator produces is a holdout built from a different seed, ordering and phrasing — genuinely useful for catching a prompt tuned to one layout, and genuinely **not** a blind set. **Report it as a holdout. Never quote it as a blind-set score** until a human outside the prompt work has written one. |
+
+## 11. Data sources and licences (DR-6)
 
 | Source | Use | Licence |
 |---|---|---|
@@ -129,7 +143,7 @@ Portfolio, cedents and treaty wordings are **entirely synthetic**. Events are
 real, and the referenced market losses are real; those are used for
 credibility and the B5 back-test only, **never as model inputs**.
 
-## 11. Outstanding — to validate, not blocking
+## 12. Outstanding — to validate, not blocking
 
 1. `calibration_factor` (V3) and the EQ country factors (Q3) are 1.0 / 0.5 placeholders until B5 runs. Calibrate on one event, test on the other, and report misses honestly.
 2. The EQ MMI table (Q1) should be checked against published Hazus repair ratios before it is cited as anything but illustrative.
@@ -138,3 +152,4 @@ credibility and the B5 back-test only, **never as model inputs**.
 5. Baseline manual-effort figures are hypotheses until the B1 run.
 6. The portfolio exposure weights (X1) should be rebuilt on GIROJ and e-Stat figures before any claim about regional accuracy is made.
 7. X6 is the single most important honest disclosure in the proof pack: report the under-prediction and the calibration separately.
+8. **Y9 is the second: the holdout set is not a blind set.** A human outside the prompt work needs to write three wordings with planted issues the prompt author never sees. Until then, the holdout score is reported as a holdout score.

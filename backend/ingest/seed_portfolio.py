@@ -136,6 +136,7 @@ class Treaty:
     source_pdf: str | None = None
     wording_id: str | None = None
     extraction: dict[str, Any] | None = None
+    endorsement: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -211,6 +212,10 @@ class WordingSpec:
     reinstatements: dict[str, Any]
     note: str
     expired: bool = False
+    #: Set when a scanned endorsement overrides a base term (FR-ENDORSE-3).
+    #: `hours_clause` above holds the EFFECTIVE term; this records what the
+    #: base wording said and where the override came from.
+    endorsement: dict[str, Any] | None = None
 
 
 _JP_TERRITORY = {"include": ("JPN",), "exclude": ()}
@@ -245,10 +250,22 @@ WORDINGS: tuple[WordingSpec, ...] = (
     ),
     WordingSpec(
         "W4", "C-YAMABIKO", "CAT_XL", ("WS", "EQ"),
-        {"WS": 72, "EQ": 72, "FL": 168, "OTHER": 168},
+        # WS is 168 EFFECTIVE: the base clause says 72 and a scanned,
+        # image-only endorsement overrides it. FR-ENDORSE-3 makes the
+        # endorsement's term the operative one.
+        {"WS": 168, "EQ": 72, "FL": 168, "OTHER": 168},
         ("war", "nuclear", "storm surge"),
         _JP_TERRITORY, _TWO_REINSTATEMENTS,
-        "Storm surge excluded outright. Two reinstatements.",
+        "Storm surge excluded outright. Two reinstatements. Carries a scanned, "
+        "image-only endorsement that overrides the windstorm hours clause from "
+        "72 to 168 - the FR-ENDORSE case.",
+        endorsement={
+            "overrides": "hours_clause.WS",
+            "base_value": 72,
+            "endorsed_value": 168,
+            "source": "transcription",
+            "note": "stamped and signed endorsement page, no text layer",
+        },
     ),
     WordingSpec(
         "W5", "C-MARIPOSA", "CAT_XL", ("WS",),
@@ -421,6 +438,7 @@ def _treaty_from_wording(
         source_pdf=f"gs://{{bucket}}/treaties/{wording.wording_id.lower()}.pdf",
         wording_id=wording.wording_id,
         extraction=None,  # filled by ingest_treaty.py at S3
+        endorsement=dict(wording.endorsement) if wording.endorsement else None,
     )
 
 
