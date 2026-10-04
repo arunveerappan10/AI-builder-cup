@@ -144,7 +144,10 @@ def test_both_embedders_satisfy_the_protocol():
 
 def test_the_gemini_embedder_is_configured_for_the_specified_model():
     """C-2: gemini-embedding-001 at 768 dims on the global endpoint."""
-    gemini = GeminiEmbedder(project="techno-crackers-catsight")
+    # A dummy project, deliberately. The real ID belongs only in the
+    # environment, and a test asserting on model constants has no business
+    # knowing it.
+    gemini = GeminiEmbedder(project="p")
     assert gemini.model == "gemini-embedding-001"
     assert gemini.dimensions == 768
     assert gemini.location == "global"
