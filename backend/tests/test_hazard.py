@@ -510,9 +510,53 @@ def test_shakemap_reads_the_mmi_column_by_name_not_by_position():
 
 
 def test_mmi_at_samples_the_nearest_cell():
+    """Inside the grid, take the nearest cell."""
     grid = parse_shakemap_grid(SHAKEMAP_XML)
     assert mmi_at(37.52, 136.98, grid) == pytest.approx(8.9)
-    assert mmi_at(36.49, 138.02, grid) == pytest.approx(4.6)
+    assert mmi_at(36.51, 137.02, grid) == pytest.approx(6.5)
+    assert mmi_at(36.51, 137.98, grid) == pytest.approx(4.6)
+
+
+def test_mmi_at_returns_zero_outside_the_grid():
+    """Nearest-cell sampling always returns *something*, so an unbounded grid
+    hands a location thousands of km away its nearest corner cell. The real
+    Noto grid did exactly that: MMI 2.9 for every Taiwanese and Philippine
+    region, which then appear in the event and let FR-MATCH respond a
+    Philippine treaty to a Japanese earthquake.
+    """
+    grid = parse_shakemap_grid(SHAKEMAP_XML)
+    assert mmi_at(25.0, 121.5, grid) == 0.0  # Taipei
+    assert mmi_at(14.6, 121.0, grid) == 0.0  # Metro Manila
+    assert mmi_at(36.49, 138.02, grid) == 0.0  # just outside the corner
+
+
+def test_grid_bounds_come_from_the_grid_specification():
+    grid = parse_shakemap_grid(SHAKEMAP_XML)
+    assert (grid.lon_min, grid.lat_min) == (136.0, 36.5)
+    assert (grid.lon_max, grid.lat_max) == (138.0, 38.0)
+    assert grid.contains(37.0, 137.0)
+    assert not grid.contains(37.0, 150.0)
+
+
+def test_grid_bounds_fall_back_to_the_cell_extent():
+    """A grid file without a grid_specification must still be bounded, or the
+    out-of-grid guard silently stops working."""
+    without_spec = SHAKEMAP_XML.replace(
+        '<grid_specification lon_min="136.0" lat_min="36.5" lon_max="138.0" lat_max="38.0"\n'
+        '      nlon="3" nlat="3"/>',
+        "",
+    )
+    grid = parse_shakemap_grid(without_spec)
+    assert (grid.lon_min, grid.lon_max) == (136.0, 138.0)
+    assert (grid.lat_min, grid.lat_max) == (36.5, 38.0)
+    assert mmi_at(25.0, 121.5, grid) == 0.0
+
+
+def test_grid_bounds_are_inclusive_at_the_edge():
+    grid = parse_shakemap_grid(SHAKEMAP_XML)
+    assert grid.contains(36.5, 136.0)
+    assert grid.contains(38.0, 138.0)
+    assert mmi_at(36.5, 136.0, grid) == pytest.approx(5.0)
 
 
 def test_mmi_sampled_near_the_epicentre_lands_in_the_top_bands():

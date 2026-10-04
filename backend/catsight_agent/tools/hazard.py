@@ -164,14 +164,49 @@ def wind_at(lat: float, lon: float, track: Iterable[TrackPoint]) -> float:
 
 @dataclass(frozen=True)
 class ShakeMapGrid:
-    """MMI samples from a USGS ShakeMap `grid.xml`."""
+    """MMI samples from a USGS ShakeMap `grid.xml`, with its extent.
+
+    The extent is load-bearing, not decoration. Nearest-cell sampling always
+    returns *something*, so without bounds a location thousands of kilometres
+    away is handed the nearest corner cell's intensity: the Noto grid assigns
+    MMI 2.9 to every Taiwanese and Philippine region. Those regions then
+    appear in the event, and FR-MATCH uses an event's regions to decide which
+    treaties respond - so a Philippine treaty would match a Japanese
+    earthquake.
+    """
 
     cells: tuple[tuple[float, float, float], ...]  # (lon, lat, mmi)
     event_id: str | None = None
+    lon_min: float | None = None
+    lat_min: float | None = None
+    lon_max: float | None = None
+    lat_max: float | None = None
 
     def __post_init__(self) -> None:
         if not self.cells:
             raise ValueError("ShakeMap grid has no cells")
+        # Fall back to the cells' own extent, per bound. Real ShakeMap
+        # products vary in what their grid_specification carries, and filling
+        # only when *all* bounds are absent would leave a partially specified
+        # grid half-bounded - which re-admits out-of-grid regions on the
+        # unbounded axis and makes `contains` raise on a None comparison.
+        lons = [c[0] for c in self.cells]
+        lats = [c[1] for c in self.cells]
+        for name, value in (
+            ("lon_min", min(lons)),
+            ("lon_max", max(lons)),
+            ("lat_min", min(lats)),
+            ("lat_max", max(lats)),
+        ):
+            if getattr(self, name) is None:
+                object.__setattr__(self, name, value)
+
+    def contains(self, lat: float, lon: float) -> bool:
+        """Whether a location falls inside the grid's extent."""
+        return (
+            self.lat_min <= lat <= self.lat_max  # type: ignore[operator]
+            and self.lon_min <= lon <= self.lon_max  # type: ignore[operator]
+        )
 
 
 def parse_shakemap_grid(xml_text: str) -> ShakeMapGrid:
@@ -189,6 +224,7 @@ def parse_shakemap_grid(xml_text: str) -> ShakeMapGrid:
     fields: dict[str, int] = {}
     data_text: str | None = None
     event_id = root.attrib.get("event_id")
+    bounds: dict[str, float] = {}
 
     for element in root.iter():
         tag = strip_ns(element.tag)
@@ -197,6 +233,10 @@ def parse_shakemap_grid(xml_text: str) -> ShakeMapGrid:
             fields[name] = int(element.attrib["index"]) - 1  # 1-based in the file
         elif tag == "grid_data":
             data_text = element.text
+        elif tag == "grid_specification":
+            for key in ("lon_min", "lat_min", "lon_max", "lat_max"):
+                if key in element.attrib:
+                    bounds[key] = float(element.attrib[key])
 
     for required in ("LON", "LAT", "MMI"):
         if required not in fields:
@@ -213,11 +253,17 @@ def parse_shakemap_grid(xml_text: str) -> ShakeMapGrid:
             continue  # ragged or blank line
         cells.append((float(parts[lon_i]), float(parts[lat_i]), float(parts[mmi_i])))
 
-    return ShakeMapGrid(cells=tuple(cells), event_id=event_id)
+    return ShakeMapGrid(cells=tuple(cells), event_id=event_id, **bounds)
 
 
 def mmi_at(lat: float, lon: float, grid: ShakeMapGrid) -> float:
-    """MMI at the grid cell nearest to a location."""
+    """MMI at the grid cell nearest to a location, or 0.0 outside the grid.
+
+    Returning 0.0 rather than the nearest edge cell is the point: see
+    `ShakeMapGrid`.
+    """
+    if not grid.contains(lat, lon):
+        return 0.0
     nearest_mmi = 0.0
     nearest_distance = float("inf")
     for cell_lon, cell_lat, mmi in grid.cells:

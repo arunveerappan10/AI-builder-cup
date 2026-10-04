@@ -126,7 +126,21 @@ wrong occurrence).
 | Y8 | W4's **effective** windstorm hours window is 168, not the 72 its base clause states | DERIVED | FR-ENDORSE-3 makes the endorsement operative. The treaty record carries the effective term plus `endorsement{base_value, endorsed_value, source}` for provenance, and the answer key records both rows with distinct `source` values. |
 | Y9 | **The "blind set" is a structural holdout, not a blind set** | JUDGEMENT | ⚠️ DR-2 and risk #5 in the win-readiness review ask for wordings written by someone **outside the prompt work**, so an accuracy score is not self-graded. This cannot be satisfied by the same author who writes the wordings, the answer key and the extraction prompts. What the generator produces is a holdout built from a different seed, ordering and phrasing — genuinely useful for catching a prompt tuned to one layout, and genuinely **not** a blind set. **Report it as a holdout. Never quote it as a blind-set score** until a human outside the prompt work has written one. |
 
-## 11. Data sources and licences (DR-6)
+## 11. Event replay files (DR-3)
+
+| # | Assumption | Status | Notes |
+|---|---|---|---|
+| Z1 | **`duration_h` is the damaging window, not the track lifetime** | JUDGEMENT | The most consequential decision in `build_events.py`. Jebi's IBTrACS track spans **213 hours** from genesis to dissipation; using that as the duration would breach every hours clause and make the FR-WORD-1 flag fire on every replay, meaninglessly. The duration is the span of track points at which at least one in-scope region sees wind ≥ 25.7 m/s. |
+| Z2 | The threshold is the **vulnerability curve's own** 25.7 m/s | DERIVED | Below it the Emanuel damage ratio is zero by construction, so those hours cannot contribute loss and therefore cannot lengthen a loss occurrence. Not an independently chosen number. |
+| Z3 | Resulting durations: Jebi **9 h**, Haiyan **12 h**, Hagibis **27 h** | DERIVED | All comfortably inside a 72-hour clause, consistent with the DOMAIN_PRIMER's statement that Jebi's damage was "well inside 72". The primer says "about 24 hours"; the computed 9 h reflects 6-hourly track resolution over the covered regions. Both readings agree on what matters — no split. |
+| Z4 | An earthquake's `duration_h` is **0** | JUDGEMENT | A mainshock is instantaneous, so no hours clause can split it. A real aftershock sequence would extend it; **not modelled.** Noto's 1 Jan 2024 sequence included substantial aftershocks, so a production system would need to decide whether they form one occurrence. |
+| Z5 | MMI is **0 outside the ShakeMap grid extent** | DERIVED | Nearest-cell sampling always returns *something*. Unbounded, the Noto grid assigned MMI 2.9 to every Taiwanese and Philippine region — all band 0, so harmless to the loss, but they then appear in `event.regions`, and **FR-MATCH uses an event's regions to decide which treaties respond**. A Philippine treaty would have matched a Japanese earthquake. Bounds come from `grid_specification`, falling back **per key** to the cells' own extent. |
+| Z6 | The ShakeMap grid URL is **resolved through the USGS event API**, not hardcoded | DERIVED | The download URL carries a product-version timestamp. Noto's ShakeMap is at version 10, so a pinned URL goes stale on the next revision. |
+| Z7 | RESEARCH_FINDINGS records Noto's max MMI as 8.9; ShakeMap v10 gives **8.793** | SOURCED | The product has been revised since that note was written. The build takes the figure from the data, not the note. |
+| Z8 | Facts and reference losses are **never model inputs** | DERIVED | Quoted from RESEARCH_FINDINGS §D8 for credibility and the B5 back-test only. Every event file carries that statement in its own `disclaimer` field, so the file cannot be read as claiming them as output. |
+| Z9 | Source data is **cache-first, never fetched implicitly** | JUDGEMENT | The 114 MB CSV and 7.6 MB grid live in git-ignored `data/raw/`. A missing source fails with the exact URL and target path rather than producing a half-event; `--fetch` downloads explicitly. A zero-byte file counts as missing, because a truncated download is worse than an absent one. |
+
+## 12. Data sources and licences (DR-6)
 
 | Source | Use | Licence |
 |---|---|---|
@@ -143,7 +157,7 @@ Portfolio, cedents and treaty wordings are **entirely synthetic**. Events are
 real, and the referenced market losses are real; those are used for
 credibility and the B5 back-test only, **never as model inputs**.
 
-## 12. Outstanding — to validate, not blocking
+## 13. Outstanding — to validate, not blocking
 
 1. `calibration_factor` (V3) and the EQ country factors (Q3) are 1.0 / 0.5 placeholders until B5 runs. Calibrate on one event, test on the other, and report misses honestly.
 2. The EQ MMI table (Q1) should be checked against published Hazus repair ratios before it is cited as anything but illustrative.
@@ -152,4 +166,5 @@ credibility and the B5 back-test only, **never as model inputs**.
 5. Baseline manual-effort figures are hypotheses until the B1 run.
 6. The portfolio exposure weights (X1) should be rebuilt on GIROJ and e-Stat figures before any claim about regional accuracy is made.
 7. X6 is the single most important honest disclosure in the proof pack: report the under-prediction and the calibration separately.
-8. **Y9 is the second: the holdout set is not a blind set.** A human outside the prompt work needs to write three wordings with planted issues the prompt author never sees. Until then, the holdout score is reported as a holdout score.
+8. Z4: decide whether Noto's aftershock sequence should form one occurrence or several before the earthquake path is presented as complete.
+9. **Y9 is the second: the holdout set is not a blind set.** A human outside the prompt work needs to write three wordings with planted issues the prompt author never sees. Until then, the holdout score is reported as a holdout score.
