@@ -10,16 +10,16 @@ Google Cloud AI Builder Cup 2026 · BFSI theme · Team Techno Crackers
 |---|---|---|---|
 | — | [`../CLAUDE.md`](../CLAUDE.md) | Rules and commands Claude Code follows | ✅ current |
 | 1 | [`BUILD_PLAN.md`](BUILD_PLAN.md) | **Start here.** Build order, stage gates, target scenario, risk register | ✅ current |
-| 2 | [`REQUIREMENTS.md`](REQUIREMENTS.md) | Base spec v1 — requirement IDs, acceptance criteria, data specs, API contract, agent specs | ⚠️ **not yet in this repo** |
+| 2 | [`REQUIREMENTS.md`](REQUIREMENTS.md) | Base spec v1 — requirement IDs, acceptance criteria, data specs, API contract, agent specs | ✅ base pack |
 | 3 | [`REQUIREMENTS_V2.md`](REQUIREMENTS_V2.md) | Addendum — verifier, Clause Courtroom, endorsement detective, what-if, judge mode, revised NFRs | ✅ current |
-| 4 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | Reinsurance terms and the worked example used as test fixtures | ⚠️ **not yet in this repo** |
+| 4 | [`DOMAIN_PRIMER.md`](DOMAIN_PRIMER.md) | Reinsurance terms and the worked example used as test fixtures | ✅ base pack |
 | 5 | [`MONEY_MOMENT.md`](MONEY_MOMENT.md) | The demo's climax, derived number by number | ✅ current · **§4 needs domain lead** |
 | 6 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Agent graph, data flows, service topology, trust architecture | ✅ current |
-| 7 | [`RESEARCH_FINDINGS.md`](RESEARCH_FINDINGS.md) | Verified facts, API quirks, data-source details | ⚠️ **not yet in this repo** |
-| 8 | [`EXECUTION_PLAN.md`](EXECUTION_PLAN.md) | GCP setup commands, cost model, deploy procedure | ⚠️ **not yet in this repo** |
-| 9 | [`BUSINESS_IMPACT.md`](BUSINESS_IMPACT.md) | Benchmarks B1–B8 and the impact model | ⚠️ **not yet in this repo** |
-| — | [`SETUP.md`](SETUP.md) | How the infrastructure was built (owner reference) | ⚠️ **not yet in this repo** |
-| — | [`GETTING_STARTED.md`](GETTING_STARTED.md) | Phase prompts and team roles | ⚠️ **not yet in this repo** |
+| 7 | [`RESEARCH_FINDINGS.md`](RESEARCH_FINDINGS.md) | Verified facts, API quirks, data-source details | ✅ base pack |
+| 8 | [`EXECUTION_PLAN.md`](EXECUTION_PLAN.md) | GCP setup commands, cost model, deploy procedure | ✅ base pack |
+| 9 | [`BUSINESS_IMPACT.md`](BUSINESS_IMPACT.md) | Benchmarks B1–B8 and the impact model | ✅ base pack |
+| — | [`SETUP.md`](SETUP.md) | How the infrastructure was built (owner reference) | ✅ base pack |
+| — | [`GETTING_STARTED.md`](GETTING_STARTED.md) | Phase prompts and team roles | ✅ base pack · superseded by `BUILD_PLAN.md` for ordering |
 
 ### Deliverables (S9)
 
@@ -44,24 +44,15 @@ REQUIREMENTS_V2.md  >  REQUIREMENTS.md  >  everything else
 
 ---
 
-## ⚠️ Base pack still to be brought across
+## Base pack provenance
 
-Six documents are referenced throughout but are **not yet in this repo**: `REQUIREMENTS.md`, `DOMAIN_PRIMER.md`, `RESEARCH_FINDINGS.md`, `EXECUTION_PLAN.md`, `BUSINESS_IMPACT.md`, `SETUP.md`, `GETTING_STARTED.md`.
+Seven documents — `REQUIREMENTS.md`, `DOMAIN_PRIMER.md`, `RESEARCH_FINDINGS.md`, `EXECUTION_PLAN.md`, `BUSINESS_IMPACT.md`, `SETUP.md`, `GETTING_STARTED.md` — originate in the team repo (`venketraj/catsight-ai-buildercup-2026`) and were copied here **unmodified**.
 
-They exist in the team repo (`venketraj/catsight-ai-buildercup-2026`) and should be **copied, not rewritten** — they hold verified research, cited sources, the hand-checked worked example that the engine's tests depend on, and the domain lead's review. Regenerating them would lose fidelity on exactly the content that is hardest to recover.
+They were copied rather than rewritten deliberately: they hold verified research with cited sources, the hand-checked worked example the engine's tests depend on, and the domain lead's review. Regenerating them would lose fidelity on exactly the content that is hardest to recover.
 
-```bash
-# from a clone of the team repo, into this repo
-cp <team-repo>/docs/REQUIREMENTS.md      docs/
-cp <team-repo>/docs/DOMAIN_PRIMER.md     docs/
-cp <team-repo>/docs/RESEARCH_FINDINGS.md docs/
-cp <team-repo>/docs/EXECUTION_PLAN.md    docs/
-cp <team-repo>/docs/BUSINESS_IMPACT.md   docs/
-cp <team-repo>/docs/SETUP.md             docs/
-cp <team-repo>/docs/GETTING_STARTED.md   docs/
-```
+**All deltas live in `REQUIREMENTS_V2.md`**, so the base pack stays diffable against the team's version. Do not edit the seven in place — add to the addendum instead.
 
-**S2 (the engine) depends on `DOMAIN_PRIMER.md`'s worked example** for its test fixtures — the reference figures are reproduced in `MONEY_MOMENT.md` §3, but the primer is the source of truth and the domain lead's sign-off target.
+**S2 (the engine) depends on `DOMAIN_PRIMER.md`'s worked example** for its test fixtures. The reference figures are reproduced in `MONEY_MOMENT.md` §3, but the primer is the source of truth and the domain lead's sign-off target.
 
 ---
 
