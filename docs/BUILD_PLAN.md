@@ -176,10 +176,21 @@ These do not block code and must start as early as their dependency allows.
 | # | Decision | Status |
 |---|---|---|
 | 1 | Build location and git remote — this repo, `main` with per-stage branches | ✅ resolved: `github.com/arunveerappan10/AI-builder-cup` |
-| 2 | `gcloud` and `firebase-tools` are not installed locally; GCP access unverified; `gemini-3.5-flash-lite` / `gemini-3.8-flash` not yet confirmed to resolve on the project | ⏳ **open** — S1 and S2 proceed locally meanwhile |
-| 3 | Python 3.12 required; 3.14.6 is currently on PATH | ⏳ **open** |
+| 2 | `gcloud` and `firebase-tools` are not installed locally; GCP access unverified; `gemini-3.5-flash-lite` / `gemini-3.8-flash` not yet confirmed to resolve on the project | ⏳ **open** — **placeholders in use**, see below. S1 and S2 proceed locally meanwhile |
+| 3 | Python 3.12 required; only 3.14 is installed | ⏳ **open** |
 | 4 | Money-moment framing — reinstatement-premium basis and L1 reinstatement sufficiency | ⏳ **open** — needs domain lead, see `MONEY_MOMENT.md` §4 |
 | 5 | GCP project remains `techno-crackers-catsight` (owned by the project owner) while code lives in this repo | ⏳ confirm |
+
+### Placeholder convention (decision 2)
+
+Until GCP details arrive, **every environment-specific value is a `<PLACEHOLDER>` in exactly two files**:
+
+- `backend/.env.example` — project ID, bucket, CORS origins, admin token, model IDs, feature switches
+- `frontend/.env.example` — the Cloud Run service URL (which only exists after the first deploy)
+
+**No project ID, bucket name, service-account email or URL may be hardcoded anywhere else in the codebase.** Scripts and application code read them from the environment, so swapping in real values later is a one-file edit per side with no code search. `scripts/setup_gcp.sh` and `deploy.sh` take the project ID from the environment too.
+
+This also keeps the public repo clean: the live URL and project identifiers appear only in a git-ignored `.env`, never in committed source.
 
 ---
 

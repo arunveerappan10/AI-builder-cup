@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Secrets and local config — NEVER commit
+.env
+.env.local
+.env.*.local
+*-key.json
+service-account*.json
+
+# Large public downloads (C: data/raw is git-ignored)
+backend/data/raw/
+
+# Node
+node_modules/
+dist/
+
+# Benchmark output
+backend/benchmarks/results/*.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
