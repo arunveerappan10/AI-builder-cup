@@ -9,6 +9,7 @@ Google Cloud AI Builder Cup 2026 · BFSI theme · Team Techno Crackers
 | # | Doc | Purpose | Status |
 |---|---|---|---|
 | — | [`../CLAUDE.md`](../CLAUDE.md) | Rules and commands Claude Code follows | ✅ current |
+| 0 | [`STATUS.md`](STATUS.md) | **What exists today, what is measured, what is pending.** Read before picking anything up | ✅ 2026-10-06 |
 | 1 | [`BUILD_PLAN.md`](BUILD_PLAN.md) | **Start here.** Build order, stage gates, target scenario, risk register | ✅ current |
 | 2 | [`REQUIREMENTS.md`](REQUIREMENTS.md) | Base spec v1 — requirement IDs, acceptance criteria, data specs, API contract, agent specs | ✅ base pack |
 | 3 | [`REQUIREMENTS_V2.md`](REQUIREMENTS_V2.md) | Addendum — verifier, Clause Courtroom, endorsement detective, what-if, judge mode, revised NFRs | ✅ current |
@@ -18,6 +19,7 @@ Google Cloud AI Builder Cup 2026 · BFSI theme · Team Techno Crackers
 | 7 | [`RESEARCH_FINDINGS.md`](RESEARCH_FINDINGS.md) | Verified facts, API quirks, data-source details | ✅ base pack |
 | 8 | [`EXECUTION_PLAN.md`](EXECUTION_PLAN.md) | GCP setup commands, cost model, deploy procedure | ✅ base pack |
 | 9 | [`BUSINESS_IMPACT.md`](BUSINESS_IMPACT.md) | Benchmarks B1–B8 and the impact model | ✅ base pack |
+| 10 | [`RESULTS.md`](RESULTS.md) | Every measured number, with the caveat each one carries | ✅ 2026-10-05 |
 | — | [`SETUP.md`](SETUP.md) | How the infrastructure was built (owner reference) | ✅ base pack |
 | — | [`GETTING_STARTED.md`](GETTING_STARTED.md) | Phase prompts and team roles | ✅ base pack · superseded by `BUILD_PLAN.md` for ordering |
 
