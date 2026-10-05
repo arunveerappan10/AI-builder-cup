@@ -20,7 +20,7 @@ from catsight_agent.schemas import (
     CourtroomVerdict,
     Event,
     EventRegion,
-    FieldProvenance,
+    FieldCitation,
     HoursClause,
     LayerTerms,
     PricedOutcome,
@@ -136,7 +136,7 @@ def test_a_citation_records_whether_it_came_from_a_scan():
 
 def test_field_provenance_records_the_page_per_field():
     """FR-INGEST-1 requires a page for every extracted field."""
-    provenance = FieldProvenance(page=2, clause_no="5")
+    provenance = FieldCitation(field="hours_clause.WS", page=2, clause_no="5")
     assert provenance.page == 2
     assert provenance.source == "text"
 

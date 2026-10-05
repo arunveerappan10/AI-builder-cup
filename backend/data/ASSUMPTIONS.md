@@ -173,6 +173,24 @@ wrong occurrence).
 | VF6 | Normalisation undoes what `pypdf` mangles and nothing more | JUDGEMENT | NFKC (ligatures), curly quotes, en/em dashes, soft hyphens, zero-width characters, hyphenated line breaks, whitespace collapse, casefold. Punctuation is **not** stripped wholesale: "not, covered" must not match "not covered", and "shall not apply" must not match "shall apply". |
 | VF7 | No FR-VERIFY-2 number exists yet | UNVERIFIED | The semantic check needs `MODEL_REASON`. Every `semantic_pass` in the local suite comes from a stub (`AlwaysSupports`), so **QA-10's result covers the deterministic half only**. The semantic half cannot be measured until the models resolve on a real project. Same class of gap as R11. |
 
+## 13b. Live extraction (FR-INGEST-1, S3 online half)
+
+Measured 2026-10-05 against `techno-crackers-catsight`. Full report in
+`docs/RESULTS.md`.
+
+| # | Assumption | Status | Note |
+|---|---|---|---|
+| G1 | `response_schema` cannot express exclusive bounds | SOURCED | Verified live: `Field(gt=0)` emits `exclusiveMinimum`, which Gemini's `Schema` rejects before a request is sent. `gemini_response_schema()` relaxes it to `minimum`. **Consequence: the schema no longer forbids a zero limit** - FR-INGEST-3's validator is what rejects it, so that validation is load-bearing, not defensive. |
+| G2 | An open-ended map is the one shape the model will not populate | DERIVED | `field_pages: dict[str, FieldProvenance]` returned `{}` and `endorsement: dict[...]` returned `null` on every run - while the model was correctly *applying* the endorsement it refused to describe. A list of records and a typed object both populated immediately. Design rule: lists and named fields, never free-form maps, in any `response_schema`. |
+| G3 | Money in the answer key is in **millions** | JUDGEMENT | Unstated, the model returns raw currency units and every money field scores wrong while being arguably correct. The instruction pins the unit. |
+| G4 | `limit` is the maximum payment, not the top of the layer | SOURCED | The model computed `limit = stated_limit - retention` on 3 of 8 treaties, producing non-contiguous programmes. Caught by FR-INGEST-3, fixed by defining the term and asking the model to check contiguity before answering. |
+| G5 | The hours clause is a definition, independent of coverage | JUDGEMENT | The answer key records the period the clause *states* for each peril even where that peril is not covered. The first instruction said "0 where none applies", and the model correctly reasoned Flood was uncovered and returned 0. The convention is right - an hours clause is a definition - but it has to be said. |
+| G6 | `exclusions` means perils, not classes of business, and not sanctions | JUDGEMENT | A sanctions clause limits payment; it does not exclude a cause of loss. Facultative/financial-guarantee/compulsory-pool terms are scope-of-business. Both were extracted as exclusions until the instruction scoped the field. Defensible domain reasoning, but it is a **scoping decision matching this answer key** and the blind set must test whether it generalises. |
+| G7 | `temperature=0` does not give determinism | SOURCED | Two runs over the same PDFs with identical settings disagreed on T-005 and T-008. Any claim of reproducibility must be measured over repeats, not assumed. QA-11 requires 5 identical runs; that has not been done. |
+| G8 | Quota is indistinguishable from inaccuracy | SOURCED | An unretried 429 scores as a wrong answer. One whole run (33.9%) was pure throttling. Retries cover 429/503/500 and transport drops; 400 is never retried. Vertex quota throttles 8 sequential PDF requests on this project. |
+| G9 | **QA-3's 100% is an upper bound, not an expectation** | UNVERIFIED | Six prompt revisions ran against this answer key. The defects fixed were real, but the score is on tuned data. Quote it as "100% on the eight planted wordings after six revisions against them". The general number requires Y9. |
+| G10 | Citation coverage is the real provenance gap | SOURCED | Page accuracy is 93.8% where a citation was offered, but only 77.4% of fields carry one at all. C-7 wants every claim cited. Reported as two numbers because accuracy alone flatters an extractor that cites only easy fields. |
+
 ## 14. Data sources and licences (DR-6)
 
 | Source | Use | Licence |
@@ -199,7 +217,8 @@ credibility and the B5 back-test only, **never as model inputs**.
 5. Baseline manual-effort figures are hypotheses until the B1 run.
 6. The portfolio exposure weights (X1) should be rebuilt on GIROJ and e-Stat figures before any claim about regional accuracy is made.
 7. X6 is the single most important honest disclosure in the proof pack: report the under-prediction and the calibration separately.
-8. **R11 is the third: no retrieval quality number exists yet.** Chunking, ranking and the QA harness are tested; the embedder they are tested against is not semantic. Nothing about recall, precision or extraction accuracy can be reported until `GeminiEmbedder` runs against a live index.
+8. **R11, partly closed.** `GeminiEmbedder` now runs live: 768 dims, correct ranking against a planted decoy, but margins differing 8x by query phrasing (`RESULTS.md` section 4). Still outstanding: no recall or precision figure over the full corpus. Original note: Chunking, ranking and the QA harness are tested; the embedder they are tested against is not semantic. Nothing about recall, precision or extraction accuracy can be reported until `GeminiEmbedder` runs against a live index.
 9. Z4: decide whether Noto's aftershock sequence should form one occurrence or several before the earthquake path is presented as complete.
 10. **Y9 is the second: the holdout set is not a blind set.** A human outside the prompt work needs to write three wordings with planted issues the prompt author never sees. Until then, the holdout score is reported as a holdout score.
 11. **VF7: QA-10's result is the deterministic half only.** Every `semantic_pass` in the suite comes from a stub, so the FR-VERIFY-2 check is unmeasured. Report QA-10 as "100% of mechanically corrupted citations withheld, 0 false withholds" - which is what was tested - and not as citation accuracy in general.
+12. **G9 is now the most important disclosure of all: QA-3's 100% is on data the prompt was tuned against.** Six revisions, each driven by the previous run's failures on this same answer key. Report it with that sentence attached, and treat the blind set (Y9) as the number that would support a general claim.

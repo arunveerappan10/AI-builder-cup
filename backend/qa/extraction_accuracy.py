@@ -301,6 +301,14 @@ def format_report(report: AccuracyReport, *, max_failures: int = 15) -> str:
             f"citation pages     {report.pages_correct}/{report.pages_scored} "
             f"= {report.page_accuracy:.1%}"
         )
+        # Accuracy over offered citations flatters an extractor that cites
+        # only the easy fields, so coverage is reported beside it. C-7 wants
+        # every claim cited, and these are different failures.
+        coverage = report.pages_scored / report.total if report.total else 0.0
+        lines.append(
+            f"citation coverage  {report.pages_scored}/{report.total} "
+            f"= {coverage:.1%}  (fields carrying any citation)"
+        )
     else:
         lines.append("citation pages     not reported by the extractor")
 

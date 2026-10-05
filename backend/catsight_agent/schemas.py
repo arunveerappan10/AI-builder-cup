@@ -28,16 +28,18 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 __all__ = [
     "Peril",
     "TreatyType",
+    "ReinstatementBasis",
     "ClauseType",
     "IssueType",
     "Severity",
     "Citation",
-    "FieldProvenance",
+    "FieldCitation",
     "Reinstatements",
     "LayerTerms",
     "QuotaShareTerms",
     "Territory",
     "HoursClause",
+    "Endorsement",
     "TreatyTerms",
     "EventRegion",
     "EventFact",
@@ -48,10 +50,17 @@ __all__ = [
     "CourtroomSide",
     "PricedOutcome",
     "CourtroomVerdict",
+    "gemini_response_schema",
 ]
 
 Peril = Literal["WS", "EQ", "FL", "OTHER"]
 TreatyType = Literal["CAT_XL", "QS"]
+ReinstatementBasis = Literal[
+    "pro rata as to amount",
+    "pro rata as to time",
+    "pro rata as to amount and time",
+    "full",
+]
 ClauseType = Literal[
     "HOURS", "EXCLUSION", "TERRITORY", "REINSTATEMENT", "LIMIT", "PERIOD", "OTHER"
 ]
@@ -97,10 +106,17 @@ class Citation(_Strict):
         return value
 
 
-class FieldProvenance(_Strict):
-    """The page a single extracted field came from (FR-INGEST-1's
-    `field_pages`), plus how it was read."""
+class FieldCitation(_Strict):
+    """Where one extracted field came from (FR-INGEST-1's `field_pages`).
 
+    Carries its own field name because `field_pages` is a **list**, not a
+    mapping. That is a shape chosen from live behaviour, not taste: with
+    `dict[str, FieldProvenance]` the model returned an empty object every
+    time - it will not invent the keys of an open-ended map. Given an array
+    of records with `field` as a property, it populates them.
+    """
+
+    field: str
     page: int = Field(ge=1)
     clause_no: str | None = None
     source: ValueSource = "text"
@@ -113,7 +129,12 @@ class FieldProvenance(_Strict):
 
 class Reinstatements(_Strict):
     count: int = Field(ge=0)
-    basis: str = "pro rata as to amount"
+    #: An enum rather than free text. Asked for a string, the model returned
+    #: the whole clause - "pro rata as to amount, being the proportion that
+    #: the amount of limit reinstated bears to..." - which is a correct
+    #: reading and an unusable field. These four are the bases that actually
+    #: occur in treaty practice.
+    basis: ReinstatementBasis = "pro rata as to amount"
     rate: Decimal = Field(ge=0)
 
 
@@ -142,6 +163,32 @@ class Territory(_Strict):
         if overlap:
             raise ValueError(f"territory both includes and excludes {sorted(overlap)}")
         return self
+
+
+class Endorsement(_Strict):
+    """An amendment that supersedes the body of the wording (FR-ENDORSE-3).
+
+    A typed object rather than a free-form mapping, for the reason given on
+    `FieldCitation`: asked for `dict[str, str | int | None]` the model applied
+    the endorsement correctly - W4's operative 168 hours, read off a scanned
+    page with no text layer - and then returned `endorsement: null` every
+    time. Given named fields it fills them.
+
+    The lesson generalises, and it is the opposite of what the schema's
+    flexibility suggests: **an open-ended map is the one shape a model will
+    not populate.** Lists of records and typed objects both work.
+
+    Without this the report shows 168 with no way to see that the body says 72
+    and an endorsement changed it - the most important provenance in the
+    document, and the planted trap in W4.
+    """
+
+    #: The dotted field this endorsement replaces, e.g. `hours_clause.WS`.
+    overrides: str
+    base_value: str | int | None = None
+    endorsed_value: str | int | None = None
+    #: The page the endorsement appears on, as written by the model.
+    source: str | None = None
 
 
 class HoursClause(_Strict):
@@ -174,8 +221,8 @@ class TreatyTerms(_Strict):
     exclusions: list[str] = Field(default_factory=list)
     layers: list[LayerTerms] = Field(default_factory=list)
     qs: QuotaShareTerms | None = None
-    field_pages: dict[str, FieldProvenance] = Field(default_factory=dict)
-    endorsement: dict[str, str | int | None] | None = None
+    field_pages: list[FieldCitation] = Field(default_factory=list)
+    endorsement: Endorsement | None = None
 
     @model_validator(mode="after")
     def _structure_matches_type(self) -> "TreatyTerms":
@@ -210,6 +257,21 @@ class TreatyTerms(_Strict):
         if self.inception >= self.expiry:
             raise ValueError(f"inception {self.inception} is not before expiry {self.expiry}")
         return self
+
+    def pages_by_field(self) -> dict[str, int]:
+        """`{field: page}` for QA-4's citation-page score.
+
+        Last entry wins on a duplicate, which is the right default: a field
+        restated by an endorsement should resolve to the endorsement's page,
+        and that is the page the operative value actually came from.
+        """
+        return {entry.field: entry.page for entry in self.field_pages}
+
+    def provenance_of(self, field: str) -> FieldCitation | None:
+        for entry in reversed(self.field_pages):
+            if entry.field == field:
+                return entry
+        return None
 
 
 # --------------------------------------------------------------------------- #
@@ -381,3 +443,59 @@ class CourtroomVerdict(_Strict):
         if self.position and self.decided_at is None:
             raise ValueError("a recorded analyst position needs a timestamp for the audit trail")
         return self
+
+# --------------------------------------------------------------------------- #
+# The Gemini boundary
+# --------------------------------------------------------------------------- #
+
+#: JSON Schema keywords Gemini's `types.Schema` does not model. Dropped rather
+#: than translated: there is no equivalent, and sending them is a hard 400.
+_UNSUPPORTED_KEYWORDS = frozenset(
+    {"additionalProperties", "$schema", "discriminator", "const", "examples"}
+)
+
+
+def gemini_response_schema(model: type[BaseModel]) -> dict:
+    """A Gemini-compatible twin of a strict model's JSON schema.
+
+    **Verified against the live API on 2026-10-05.** Passing `TreatyTerms`
+    straight to `response_schema` is rejected: Gemini's `Schema` has no
+    `exclusiveMinimum`, so `Field(gt=0)` on `LayerTerms.limit` and
+    `QuotaShareTerms.cession_pct` fails validation before a request is even
+    sent.
+
+    The fix is **not** to relax those bounds. FR-INGEST-3 requires a limit of
+    zero to fail at extraction, so the strict bound stays on the Pydantic
+    model and the API gets a relaxed twin: `exclusiveMinimum` becomes
+    `minimum`, which is the closest thing Gemini models.
+
+    The consequence is worth stating plainly, because it is a guarantee people
+    assume they have and do not: **the schema no longer prevents a zero
+    limit.** The model can return one. `TreatyTerms.model_validate` is what
+    rejects it, which makes FR-INGEST-3's validation load-bearing rather than
+    belt-and-braces.
+
+    `$defs` and `$ref` are left alone - the live API resolves them, so
+    inlining would be work that buys nothing.
+    """
+    return _sanitise(model.model_json_schema())
+
+
+def _sanitise(node: object) -> object:
+    if isinstance(node, list):
+        return [_sanitise(item) for item in node]
+    if not isinstance(node, dict):
+        return node
+
+    out: dict = {}
+    for key, value in node.items():
+        if key == "exclusiveMinimum":
+            # Deliberately widening: `> 0` becomes `>= 0`. See the docstring.
+            out["minimum"] = value
+        elif key == "exclusiveMaximum":
+            out["maximum"] = value
+        elif key in _UNSUPPORTED_KEYWORDS:
+            continue
+        else:
+            out[key] = _sanitise(value)
+    return out
