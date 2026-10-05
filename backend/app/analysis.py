@@ -321,7 +321,15 @@ class TreatyOutcome:
                 }
                 for lr in self.cat_xl.layers
             ]
+            # The full per-party view (MONEY_MOMENT section 4.4). All of it,
+            # because the insight is the comparison: the cedent's cost, the
+            # market's receipt and ours move differently, and a caller
+            # deriving one of them from the others would get RIP's direction
+            # wrong - it is a cost to the cedent and a receipt to us.
             payload["cedent_retention"] = str(quantise(self.cat_xl.cedent_retention))
+            payload["cedent_net_cost"] = str(quantise(self.cat_xl.cedent_net_cost))
+            payload["total_rip"] = str(quantise(self.cat_xl.total_rip))
+            payload["our_loss"] = str(quantise(self.cat_xl.our_loss))
             payload["our_rip"] = str(quantise(self.cat_xl.our_rip))
             payload["market_net"] = str(quantise(self.cat_xl.market_net))
         if self.quota_share is not None:

@@ -1,0 +1,345 @@
+/*
+ * CatSight styles.
+ *
+ * Contrast is checked against WCAG AA (UI-12). The palette avoids
+ * red/green as the only signal: an exhausted layer is marked by a pattern and
+ * a label as well as a colour, because roughly 1 in 12 men cannot separate
+ * those two hues and a judge may be one of them.
+ */
+
+:root {
+  --bg: #0e1116;
+  --panel: #161b22;
+  --panel-2: #1c232c;
+  --line: #2b3440;
+  --ink: #e8edf4;
+  --ink-dim: #9fb0c3;
+  --ink-faint: #6b7d91;
+
+  /* Blue for us, amber for the cedent, slate for the wider market. Chosen to
+     stay distinguishable in greyscale as well as in colour. */
+  --ours: #4da3ff;
+  --cedent: #ffb84d;
+  --market: #8fa3b8;
+
+  --ok: #3fd18b;
+  --warn: #ffc658;
+  --bad: #ff6b6b;
+
+  --radius: 10px;
+  --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+a {
+  color: var(--ours);
+}
+
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 20px 80px;
+}
+
+/* ---------------------------------------------------------------- header -- */
+
+header.top {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+  margin-bottom: 22px;
+}
+
+header.top h1 {
+  font-size: 21px;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+header.top .tag {
+  color: var(--ink-dim);
+  font-size: 14px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.build {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+/* ----------------------------------------------------------------- lede -- */
+
+.lede {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+.lede p {
+  margin: 0 0 16px;
+  max-width: 68ch;
+  color: var(--ink-dim);
+}
+
+.lede strong {
+  color: var(--ink);
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+button.primary {
+  background: var(--ours);
+  color: #06101d;
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 18px;
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+button.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+button.primary:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+select,
+button.ghost {
+  background: var(--panel-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--ours);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- stages -- */
+
+.stages {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stages li {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+}
+
+.stages li.running {
+  border-color: var(--ours);
+  color: var(--ours);
+}
+
+.stages li.done {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+/* ---------------------------------------------------------------- panels -- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: 16px;
+}
+
+section.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+
+section.panel h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-dim);
+  margin: 0 0 14px;
+  font-weight: 650;
+}
+
+.note {
+  color: var(--ink-faint);
+  font-size: 13px;
+  margin: 10px 0 0;
+}
+
+/* --------------------------------------------------------------- figures -- */
+
+.figures {
+  display: flex;
+  gap: 26px;
+  flex-wrap: wrap;
+}
+
+.figure .label {
+  font-size: 12px;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.figure .value {
+  font-family: var(--mono);
+  font-size: 25px;
+  font-variant-numeric: tabular-nums;
+}
+
+.figure .value.ours {
+  color: var(--ours);
+}
+.figure .value.cedent {
+  color: var(--cedent);
+}
+.figure .value.market {
+  color: var(--market);
+}
+
+/* ---------------------------------------------------------------- tables -- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+th {
+  color: var(--ink-dim);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+td.num,
+th.num {
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+tbody tr:hover {
+  background: var(--panel-2);
+}
+
+tr.hero td {
+  background: rgba(77, 163, 255, 0.08);
+}
+
+.pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+}
+
+.pill.exhausted {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.pill.asif {
+  border-color: var(--ours);
+  color: var(--ours);
+}
+
+/* --------------------------------------------------------------- banners -- */
+
+.banner {
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border: 1px solid;
+}
+
+.banner.error {
+  border-color: var(--bad);
+  color: var(--bad);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.banner.info {
+  border-color: var(--line);
+  color: var(--ink-dim);
+  background: var(--panel-2);
+}
+
+/* -------------------------------------------------------------- glossary -- */
+
+abbr[title] {
+  text-decoration: underline dotted var(--ink-faint);
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
+footer.foot {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-faint);
+  font-size: 12.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

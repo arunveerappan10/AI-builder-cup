@@ -38,3 +38,7 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 .firebase/
+
+# Staged by scripts/deploy.sh from frontend/dist. A build artefact, not source.
+backend/static/
+frontend/dist/

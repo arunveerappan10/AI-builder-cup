@@ -30,6 +30,12 @@ COPY app/ ./app/
 # them: an analysis reads data/events/*.json on every request.
 COPY data/ ./data/
 
+# The built SPA, served by this same service so there is one deploy and one
+# origin - see `_mount_frontend`. Built with `npm --prefix frontend run build`
+# BEFORE the image is built; if the directory is absent the API still serves
+# and /healthz reports `frontend: false`.
+COPY static/ ./static/
+
 # Run as a non-root user. Cloud Run does not require it, but a container that
 # only ever reads its own files has no reason to be root.
 RUN useradd --create-home --uid 1000 catsight && chown -R catsight:catsight /app

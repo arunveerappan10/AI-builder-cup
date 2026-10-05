@@ -14,13 +14,16 @@ change when it lands.
 
 from __future__ import annotations
 
+import os
 import time
 from collections import deque
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.analysis import (
@@ -147,6 +150,7 @@ def create_app(config: Settings | None = None) -> FastAPI:
                 "cached_replay_only": config.cached_replay_only,
             },
             "warnings": list(config.warnings),
+            "frontend": api.state.static_dir is not None,
         }
 
     # ----------------------------------------------------------------- API-2 #
@@ -293,7 +297,67 @@ def create_app(config: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail=f"no event {event_id}")
         return {"analysis_id": analysis_id, **result.to_json()}
 
+    _mount_frontend(api)
     return api
+
+
+#: Where the built frontend might be. The container copies it to /app/static;
+#: a developer running uvicorn from `backend/` has it one level up.
+_STATIC_CANDIDATES = ("static", "../frontend/dist")
+
+
+def _mount_frontend(api: FastAPI) -> None:
+    """Serve the built SPA from this same service, if it is present.
+
+    One service rather than two, which is a deliberate simplification over
+    Firebase Hosting: the frontend and the API share an origin, so CORS stops
+    being a thing that can be configured wrongly - and a silent CORS failure,
+    with nothing in the server logs, is a classic way to lose a demo.
+
+    This does **not** reintroduce what C-10 forbids. C-10 rules out a Hosting
+    *rewrite* to the API, because that path imposes a 60-second timeout and
+    will not stream SSE. Here the API is not behind a proxy at all; it is the
+    same process, and the routes above were registered first.
+
+    Unknown paths serve `index.html` rather than 404, matching the rewrite in
+    `firebase.json` so behaviour does not depend on where this is hosted.
+    `StaticFiles(html=True)` alone does not do that - it falls back only for
+    directory paths, so refreshing on a client-side route would 404.
+
+    If no build is present the API still serves normally, which is what the
+    tests and a bare `uvicorn app.main:app` do.
+    """
+    configured = os.environ.get("STATIC_DIR")
+    candidates = (configured,) if configured else _STATIC_CANDIDATES
+
+    directory: Path | None = None
+    for candidate in candidates:
+        if candidate and (Path(candidate) / "index.html").is_file():
+            directory = Path(candidate)
+            break
+
+    if directory is None:
+        api.state.static_dir = None
+        return
+
+    index = directory / "index.html"
+    api.state.static_dir = str(directory.resolve())
+
+    assets = directory / "assets"
+    if assets.is_dir():
+        api.mount("/assets", StaticFiles(directory=assets), name="assets")
+
+    @api.get("/{path:path}", include_in_schema=False)
+    def spa(path: str) -> FileResponse:
+        # A real file at that path wins; anything else is a client-side route.
+        # `resolve()` and the prefix check stop `../` escaping the build
+        # directory - without it this would serve any file on the container.
+        if path:
+            candidate = (directory / path).resolve()
+            root = directory.resolve()
+            if candidate.is_file() and str(candidate).startswith(str(root)):
+                return FileResponse(candidate)
+        return FileResponse(index)
 
 
 app = create_app()

@@ -35,6 +35,20 @@ BUILD_LABEL="${BUILD_LABEL:-$(git rev-parse --short HEAD 2>/dev/null || echo man
 
 echo "project ${PROJECT_ID} | region ${REGION} | service ${SERVICE} | build ${BUILD_LABEL}"
 
+# Build the SPA and stage it inside the Docker build context. Docker cannot
+# COPY from outside the context, so frontend/dist is copied to backend/static
+# rather than referenced in place.
+if [[ "${SKIP_FRONTEND:-0}" != "1" ]]; then
+  echo
+  echo "building the frontend ..."
+  ( cd "${REPO_ROOT}/frontend" && npm ci --no-fund --no-audit && npm run build )
+  rm -rf "${REPO_ROOT}/backend/static"
+  cp -r "${REPO_ROOT}/frontend/dist" "${REPO_ROOT}/backend/static"
+  echo "staged $(find "${REPO_ROOT}/backend/static" -type f | wc -l) files into backend/static"
+else
+  mkdir -p "${REPO_ROOT}/backend/static"
+fi
+
 # --min-instances 0 so an idle demo costs nothing; --max-instances 3 so a
 # popular link cannot run up a bill (C-12). --timeout 300 because an analysis
 # streams for longer than the 60s default, and a truncated SSE stream looks
@@ -63,10 +77,11 @@ URL="$(gcloud run services describe "${SERVICE}" \
 echo
 echo "Service URL: ${URL}"
 echo
-echo "Next:"
-echo "  1. Put it in frontend/.env.local:  VITE_API_BASE_URL=${URL}"
-echo "  2. Verify:                         ./scripts/smoke_test.sh ${URL}"
+echo "The UI and the API are the SAME origin, so there is nothing to configure:"
+echo "  open ${URL}"
 echo
-echo "ALLOWED_ORIGINS was set to the default Hosting domains. If the frontend"
-echo "is served from anywhere else, redeploy with ALLOWED_ORIGINS set, or the"
-echo "browser will fail CORS with no error in the server logs."
+echo "Verify: ./scripts/smoke_test.sh ${URL}"
+echo
+echo "ALLOWED_ORIGINS is still set, but only matters if the UI is ever served"
+echo "from a different origin (e.g. Firebase Hosting). Served from this"
+echo "service there is no cross-origin request to allow."

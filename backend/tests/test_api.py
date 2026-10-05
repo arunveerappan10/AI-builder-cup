@@ -627,3 +627,113 @@ def test_the_app_builds_its_own_portfolio_when_none_is_injected():
     cached = api.state.portfolio
     standalone.get("/api/treaties")
     assert api.state.portfolio is cached, "the portfolio must be built once"
+
+
+# --------------------------------------------------------------------------- #
+# Serving the SPA from the same service
+# --------------------------------------------------------------------------- #
+
+
+@pytest.fixture
+def spa(tmp_path, portfolio, monkeypatch):
+    """An app serving a minimal build, so these tests do not depend on
+    `frontend/dist` having been built."""
+    dist = tmp_path / "dist"
+    (dist / "assets").mkdir(parents=True)
+    (dist / "index.html").write_text(
+        "<!doctype html><title>CatSight</title><div id='root'></div>", encoding="utf-8"
+    )
+    (dist / "assets" / "index-abc123.js").write_text("console.log(1)", encoding="utf-8")
+    (dist / "favicon.svg").write_text("<svg/>", encoding="utf-8")
+    # A file OUTSIDE the build directory, which must never be reachable.
+    (tmp_path / "secret.env").write_text("ADMIN_TOKEN=do-not-serve", encoding="utf-8")
+
+    monkeypatch.setenv("STATIC_DIR", str(dist))
+    api = create_app(load_settings({"GOOGLE_CLOUD_PROJECT": "p", "STATIC_DIR": str(dist)}))
+    api.state.portfolio = portfolio
+    return TestClient(api)
+
+
+def test_the_api_serves_the_spa_shell_at_the_root(spa):
+    response = spa.get("/")
+    assert response.status_code == 200
+    assert "CatSight" in response.text
+
+
+def test_a_client_side_route_serves_the_shell_rather_than_404(spa):
+    """Refreshing on a client route must not 404. `StaticFiles(html=True)`
+    alone falls back only for directory paths, which is the classic SPA bug,
+    and `firebase.json` configures the same rewrite - so behaviour must not
+    depend on where this is hosted."""
+    response = spa.get("/analysis/replay-jebi-2018")
+    assert response.status_code == 200
+    assert "CatSight" in response.text
+
+
+def test_a_real_file_is_served_in_preference_to_the_shell(spa):
+    assert spa.get("/favicon.svg").text == "<svg/>"
+    assert spa.get("/assets/index-abc123.js").status_code == 200
+
+
+def test_the_api_routes_still_win_over_the_catch_all(spa):
+    """The mount is registered last on purpose. If it shadowed the API the
+    whole product would return HTML."""
+    assert spa.get("/api/events").status_code == 200
+    assert spa.get("/healthz").json()["status"] == "ok"
+    assert spa.get("/api/treaties/T-999").status_code == 404
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/../secret.env",
+        "/../../secret.env",
+        "/..%2f..%2fsecret.env",
+        "/%2e%2e/secret.env",
+        "/....//....//secret.env",
+    ],
+)
+def test_traversal_cannot_escape_the_build_directory(spa, path):
+    """Without the resolve-and-prefix check this would serve any file on the
+    container, including backend/.env."""
+    response = spa.get(path)
+    assert "ADMIN_TOKEN" not in response.text
+    assert "do-not-serve" not in response.text
+
+
+def test_healthz_reports_whether_the_ui_is_being_served(spa, client):
+    """A blank page with a working API is otherwise indistinguishable from a
+    broken deploy."""
+    assert spa.get("/healthz").json()["frontend"] is True
+    # `client` has no STATIC_DIR and no build beside it in the test env.
+    assert "frontend" in client.get("/healthz").json()
+
+
+def test_without_a_build_the_api_still_serves(portfolio, monkeypatch, tmp_path):
+    """Developers run `uvicorn app.main:app` with no frontend built. That must
+    not break the API."""
+    monkeypatch.setenv("STATIC_DIR", str(tmp_path / "nonexistent"))
+    api = create_app(load_settings({"GOOGLE_CLOUD_PROJECT": "p"}))
+    api.state.portfolio = portfolio
+    bare = TestClient(api)
+    assert bare.get("/healthz").json()["frontend"] is False
+    assert bare.get("/api/events").status_code == 200
+    assert bare.get("/").status_code == 404
+
+
+def test_a_build_with_no_assets_directory_still_serves(tmp_path, portfolio, monkeypatch):
+    """A single-file build - everything inlined into index.html - has no
+    `assets/`. Mounting a directory that does not exist raises at startup, so
+    the mount has to be conditional."""
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<!doctype html><title>CatSight</title>", encoding="utf-8")
+
+    monkeypatch.setenv("STATIC_DIR", str(dist))
+    api = create_app(load_settings({"GOOGLE_CLOUD_PROJECT": "p"}))
+    api.state.portfolio = portfolio
+    inlined = TestClient(api)
+
+    assert inlined.get("/healthz").json()["frontend"] is True
+    assert "CatSight" in inlined.get("/").text
+    assert inlined.get("/assets/anything.js").status_code == 200  # falls back to the shell
