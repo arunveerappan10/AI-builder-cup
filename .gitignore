@@ -31,3 +31,10 @@ Thumbs.db
 .coverage
 .coverage.*
 htmlcov/
+
+# firebase-tools writes this into the working directory on error. It records
+# request bodies and token metadata, so it must never be committed.
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.firebase/
