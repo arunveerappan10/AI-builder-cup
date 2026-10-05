@@ -7,6 +7,13 @@ reportlab==4.2.5   # treaty wording PDFs (DR-2)
 pillow==11.0.0     # the scanned endorsement raster (FR-ENDORSE)
 pypdf==5.1.0       # reading page numbers back out of rendered PDFs
 
+# ── API (S0, S4) ────────────────────────────────────────────────────────────
+# Both arrive as google-adk dependencies and are pinned explicitly because the
+# service is deployed from this file: an unpinned transitive is a redeploy that
+# changes behaviour for reasons nobody recorded.
+fastapi==0.141.1
+uvicorn==0.54.0
+
 # ── Agent framework (S4) ────────────────────────────────────────────────────
 # Verified 2026-10-05: installs clean on Python 3.12.10, and the graph API
 # REQUIREMENTS_V2 §2 assumes is real -- `google.adk.workflow` exports

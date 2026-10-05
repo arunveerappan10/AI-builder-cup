@@ -370,48 +370,65 @@ def test_market_shares_are_explicit_not_drawn():
     assert all(0.0 < s < 1.0 for s in MARKET_SHARE.values())
 
 
-def test_the_synthetic_japanese_market_is_a_realistic_size(portfolio):
-    """About US$18.7tn of sum insured across the four Japanese cedents'
-    combined share. Japan's real insured value is order US$20-30tn, so the
-    synthetic market is the right order of magnitude rather than a toy."""
+def test_the_synthetic_japanese_market_is_the_size_the_demo_requires(portfolio):
+    """About US$2.5tn of sum insured across the four Japanese cedents.
+
+    **Deliberately smaller than reality**, and the trade-off is the point.
+    Japan's real insured value is order US$20-30tn, so this is roughly 10x
+    light. It is set by `TSI_PER_WEIGHT_USD_M`, which was re-derived so that
+    Sakura's modelled Jebi gross lands near the worked example's 54.4 and the
+    programme burns partially - without that the money moment has nothing to
+    show.
+
+    Portfolio size is not the lever for absolute loss level; that is
+    `calibration_factor` (V3) at B5. See the constant's own note.
+    """
     jp_ws = sum(
         e.tsi_usd
         for e in portfolio.exposures
         if e.peril == "WS" and portfolio.cedent(e.cedent_id).country == "JPN"
     )
-    assert 5e6 < jp_ws < 30e6  # USD millions
+    assert 2e6 < jp_ws < 3.5e6  # USD millions, i.e. US$2-3.5tn
 
 
 def test_the_jebi_replay_reproduces_the_worked_example_gross(portfolio):
     """The one that makes the demo work.
 
-    Runs the committed portfolio through the real hazard and vulnerability
-    chain over a Jebi-like track and checks the gross loss lands on the
-    documented 54.4. If this drifts, the live demo stops matching the deck.
+    **Reads the committed `jebi-2018.json`**, which is what the live demo
+    serves. The previous version of this test built its own Jebi-like track
+    and asserted against that, so when `build_events.py` landed the real
+    IBTrACS track - stronger and twice as broad - the calibration drifted 4.4x
+    and this test kept passing. A test that exercises an input production
+    never sees is worse than no test: it reports confidence it has not earned.
 
-    When build_events.py lands the real IBTrACS track this may move slightly;
-    the fix is to re-derive TSI_PER_WEIGHT_USD_M once, not to loosen this.
+    The tolerance stays tight. If this drifts again, re-derive
+    TSI_PER_WEIGHT_USD_M against the event file rather than loosening it.
     """
-    from catsight_agent.tools.hazard import TrackPoint, wind_at
-    from catsight_agent.tools.loss_engine import ExposureSlice, gross_loss
-    from catsight_agent.tools.vulnerability import VulnerabilityModel
-    from ingest.regions_reference import centroid
+    import json
+    from pathlib import Path
 
-    track = _jebi_like_track()
+    from catsight_agent.tools.loss_engine import ExposureSlice, gross_loss
+
+    event = json.loads(
+        (Path("data/events/jebi-2018.json")).read_text(encoding="utf-8")
+    )
+    from catsight_agent.tools.vulnerability import VulnerabilityModel
+
     vuln = VulnerabilityModel.load()
+    ratios = {
+        region["code"]: str(
+            vuln.wind_damage_ratio(region["intensity"]["wind_ms"], region["country"])
+        )
+        for region in event["regions"]
+        if "wind_ms" in region.get("intensity", {})
+    }
 
     exposures = portfolio.exposures_for("C-SAKURA", "WS")
-    ratios = {
-        e.region_code: vuln.wind_damage_ratio(
-            wind_at(*centroid(e.region_code), track), "JPN"
-        )
-        for e in exposures
-    }
     gross = gross_loss(
         [ExposureSlice(e.region_code, e.peril, str(e.tsi_usd)) for e in exposures],
-        {k: str(v) for k, v in ratios.items()},
+        ratios,
     )
-    assert float(gross) == pytest.approx(54.4, abs=1.0)
+    assert float(gross) == pytest.approx(54.4, abs=0.5)
 
 
 def test_the_jebi_replay_pierces_layers_one_and_two_but_not_three(portfolio):

@@ -68,7 +68,28 @@ EXPIRED_INCEPTION, EXPIRED_EXPIRY = "2025-01-01", "2025-12-31"
 #: reproduce the documented figures. See data/ASSUMPTIONS.md X3-X5 - and note
 #: that the model under-predicts Jebi's *actual* market loss by roughly 25x,
 #: which is a B5 finding to report rather than something to tune away here.
-TSI_PER_WEIGHT_USD_M = 15_000.0
+TSI_PER_WEIGHT_USD_M = 3_400.0
+#: Re-derived 2026-10-05 against the committed `jebi-2018.json`, which carries
+#: the real IBTrACS track. The previous 15,000 was calibrated against a
+#: hand-made Jebi-like track that peaked at 36 m/s over 16 prefectures; the
+#: real track peaks at 46.3 m/s over 34, and Emanuel's sigmoid is steeply
+#: non-linear there - Hyogo's damage ratio alone rises 8.7x. Sakura's modelled
+#: Jebi gross was therefore 239.55, which exhausts the whole 20/30/40
+#: programme and destroys the money moment: with no partial burn, splitting
+#: one occurrence into two changes nothing.
+#:
+#: 15,000 x 54.4/239.55 = 3,406, rounded DOWN to 3,400 rather than tuned to
+#: 3,410 to land on the deck's 6.82 exactly. Fitting a four-digit constant to
+#: a figure that is itself rounded would be reverse-fitting; the live demo
+#: reports 54.30 and our net 6.81 against the primer's didactic 54.4 and 6.82.
+#:
+#: The cost is stated plainly: the synthetic Japanese market falls from about
+#: US$11.2tn to about US$2.5tn, against a real insured value of order
+#: US$20-30tn - roughly 10x light. (An earlier comment here claimed 18.7tn;
+#: that figure was never measured and was wrong.) Absolute loss level is NOT this constant's job - that is
+#: `calibration_factor` (V3) at benchmark B5. Using portfolio size to close a
+#: vulnerability gap would conflate two different things and make both
+#: unmeasurable.
 
 #: Market share per cedent. Explicit rather than drawn, because the size of a
 #: cedent's book is structural: letting it wander with the seed would move the

@@ -5,7 +5,9 @@ addopts = "-q --strict-markers"
 
 [tool.coverage.run]
 branch = true
-source = ["catsight_agent", "ingest", "qa"]
+# `app` must be listed or the API is simply not measured: coverage
+# reports 100% while ignoring the module entirely.
+source = ["app", "catsight_agent", "ingest", "qa"]
 
 [tool.coverage.report]
 show_missing = true
