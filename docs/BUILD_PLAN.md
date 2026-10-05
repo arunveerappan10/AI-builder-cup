@@ -187,10 +187,11 @@ These do not block code and must start as early as their dependency allows.
 | # | Decision | Status |
 |---|---|---|
 | 1 | Build location and git remote — this repo, `main` with per-stage branches | ✅ resolved: `github.com/arunveerappan10/AI-builder-cup` |
-| 2 | GCP access: CLIs, enabled APIs, Firestore mode, and whether `gemini-3.5-flash-lite` / `gemini-3.8-flash` / `gemini-embedding-001` resolve on the project | ⏳ **partly resolved** — `firebase-tools` installed, `gcloud` installing. **Access still unverified**: run `scripts/check_access.ps1` after `gcloud auth application-default login`. Placeholders remain the convention |
+| 2 | GCP access: CLIs, enabled APIs, Firestore mode, and whether `gemini-3.5-flash-lite` / `gemini-3.8-flash` / `gemini-embedding-001` resolve on the project | ⏳ **partly resolved** — `gcloud` 587.0.0 and `firebase-tools` 15.32.1 installed. **Access still unverified, and no credential exists yet**: the two logins are interactive, so run them, then `scripts/check_access.ps1`. Placeholders remain the convention |
 | 3 | Python 3.12 required; only 3.14 was installed | ✅ **resolved** — 3.12.10 installed; `backend/.venv` runs on it (3.14 stays the system default) |
 | 4 | Money-moment framing — reinstatement-premium basis | ✅ **resolved** — derived from the primer's own figures in `MONEY_MOMENT.md` §4. Two non-blocking items for a practitioner in §4.5 |
 | 5 | Which GCP project this repo deploys to | ✅ **resolved 2026-10-05** — `techno-crackers-catsight`, matching the onboarding guide. Bucket `techno-crackers-catsight-docs`; Hosting origins `*.web.app` / `*.firebaseapp.com`. Substituted into the git-ignored `backend/.env`; `.env.example` keeps the placeholder |
+| 6 | Does ADK 2.x actually provide the graph `Workflow` that REQUIREMENTS_V2 §2 assumes, and does `google-adk==2.11.0` install? | ✅ **resolved 2026-10-05** — both yes. `google.adk.workflow` exports `Workflow`, `Node`, `Edge(route=...)`, `JoinNode`, `FunctionNode`, `START` and `RetryConfig`, plus `max_concurrency` on the Workflow. `Edge(route=...)` expresses the AG-5 loop and `JoinNode` the AG-6/AG-7 fan-in — the two things `SequentialAgent` cannot do, so the Scenario B fallback is a fallback and not the plan. Installing it moved pydantic 2.10.3 → 2.13.5; suite re-run green, both now pinned |
 
 ### Placeholder convention (decision 2)
 

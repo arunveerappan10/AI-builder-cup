@@ -161,7 +161,19 @@ wrong occurrence).
 | R15 | Transcription reads are reported **separately** from text-layer reads | DERIVED | At two transcription fields out of 186, a uniform average would hide a total failure to read the scan. A model that reads clean text well and scans badly has a very different weakness from one that is uniformly mediocre. |
 | R16 | Each field is claimed on **exactly one page** in the answer key | DERIVED | A field claimed on two pages cannot be cited correctly, which makes QA-4's page accuracy unscoreable for it. W8 originally did this — its hours clause appeared in both Clause 5 and the Definitions clause — so Clause 5 now cross-references rather than restating. Asserted by a test. |
 
-## 13. Data sources and licences (DR-6)
+## 13. Citation verification (FR-VERIFY, QA-10)
+
+| # | Assumption | Status | Note |
+|---|---|---|---|
+| VF1 | Verification is scoped to the **cited location**: treaty, then clause, then page | JUDGEMENT | A quote that exists somewhere in the corpus is not verified; it must exist where the citation says. This is what makes the badge `verified - {treaty}, p.{page}, cl.{clause}` something an analyst can check by turning to the page. |
+| VF2 | A clause spanning a page break verifies on **any** page it spans | JUDGEMENT | Via `pages_spanned`. Refusing a citation to page 4 of a clause that starts on page 3 would be a false withhold. |
+| VF3 | **Boilerplate text cannot detect a wrong-treaty citation** | DERIVED | All eight wordings share 11 boilerplate clauses, so a quote from W1's Schedule clause genuinely appears in W2 - citing it to W2 is not an error to catch, because it is not an error. QA-10's wrong-treaty corruption is therefore built only from treaty-unique text, which is also what a real flag cites: the operative clause, never the furniture. Found while writing QA-10, not predicted. |
+| VF4 | Mid-word truncation fails deterministically; a **clean** partial quote does not | JUDGEMENT | A cut quote cannot be checked against the page, so word-boundary alignment is enforced. But a clean, genuinely present, misleadingly partial quote **is** a substring and must pass FR-VERIFY-1 - catching the misleading omission is FR-VERIFY-2's job. Cheap checks first, the model only on what survives. |
+| VF5 | The chunk's own `source` is authoritative for the badge, not the citation's claim | JUDGEMENT | QA-12 needs `verified against transcription` to be true of the stored chunk. What the model asserts about provenance is not load-bearing. |
+| VF6 | Normalisation undoes what `pypdf` mangles and nothing more | JUDGEMENT | NFKC (ligatures), curly quotes, en/em dashes, soft hyphens, zero-width characters, hyphenated line breaks, whitespace collapse, casefold. Punctuation is **not** stripped wholesale: "not, covered" must not match "not covered", and "shall not apply" must not match "shall apply". |
+| VF7 | No FR-VERIFY-2 number exists yet | UNVERIFIED | The semantic check needs `MODEL_REASON`. Every `semantic_pass` in the local suite comes from a stub (`AlwaysSupports`), so **QA-10's result covers the deterministic half only**. The semantic half cannot be measured until the models resolve on a real project. Same class of gap as R11. |
+
+## 14. Data sources and licences (DR-6)
 
 | Source | Use | Licence |
 |---|---|---|
@@ -178,7 +190,7 @@ Portfolio, cedents and treaty wordings are **entirely synthetic**. Events are
 real, and the referenced market losses are real; those are used for
 credibility and the B5 back-test only, **never as model inputs**.
 
-## 14. Outstanding — to validate, not blocking
+## 15. Outstanding — to validate, not blocking
 
 1. `calibration_factor` (V3) and the EQ country factors (Q3) are 1.0 / 0.5 placeholders until B5 runs. Calibrate on one event, test on the other, and report misses honestly.
 2. The EQ MMI table (Q1) should be checked against published Hazus repair ratios before it is cited as anything but illustrative.
@@ -190,3 +202,4 @@ credibility and the B5 back-test only, **never as model inputs**.
 8. **R11 is the third: no retrieval quality number exists yet.** Chunking, ranking and the QA harness are tested; the embedder they are tested against is not semantic. Nothing about recall, precision or extraction accuracy can be reported until `GeminiEmbedder` runs against a live index.
 9. Z4: decide whether Noto's aftershock sequence should form one occurrence or several before the earthquake path is presented as complete.
 10. **Y9 is the second: the holdout set is not a blind set.** A human outside the prompt work needs to write three wordings with planted issues the prompt author never sees. Until then, the holdout score is reported as a holdout score.
+11. **VF7: QA-10's result is the deterministic half only.** Every `semantic_pass` in the suite comes from a stub, so the FR-VERIFY-2 check is unmeasured. Report QA-10 as "100% of mechanically corrupted citations withheld, 0 false withholds" - which is what was tested - and not as citation accuracy in general.

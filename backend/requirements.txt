@@ -1,11 +1,24 @@
 # Runtime dependencies. Pinned per CLAUDE.md / REQUIREMENTS C-5.
 #
 # The loss engine (S2) is deliberately stdlib-only -- see FR-LOSS-6.
-# These are the data-build dependencies (S1). google-adk, google-genai,
-# fastapi and friends are pinned at S3/S4, once each has been verified to
-# install and resolve against the real project. Adding unverified pins
-# would block the build on a failing install for no benefit.
 
+# ── Data build (S1) ─────────────────────────────────────────────────────────
 reportlab==4.2.5   # treaty wording PDFs (DR-2)
 pillow==11.0.0     # the scanned endorsement raster (FR-ENDORSE)
 pypdf==5.1.0       # reading page numbers back out of rendered PDFs
+
+# ── Agent framework (S4) ────────────────────────────────────────────────────
+# Verified 2026-10-05: installs clean on Python 3.12.10, and the graph API
+# REQUIREMENTS_V2 §2 assumes is real -- `google.adk.workflow` exports
+# Workflow, Node, Edge, JoinNode, START and RetryConfig. That matters because
+# the AG-5 verifier loop needs a cycle and the AG-6/AG-7 counsels need a
+# fan-out with a join, neither of which SequentialAgent can express.
+google-adk==2.11.0
+google-genai==2.28.0
+
+# Pinned explicitly although it arrives as a google-adk dependency. Every
+# agent contract in schemas.py is a strict Pydantic v2 model used as a Gemini
+# `response_schema`, so a silent minor bump changes validation behaviour at
+# the point where it is hardest to notice. Installing google-adk moved this
+# from 2.10.3 to 2.13.5; the suite was re-run and stayed green.
+pydantic==2.13.5
